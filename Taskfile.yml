@@ -1,0 +1,36 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.GREETING}}"
+    silent: true
+
+  act:
+    cmds:
+      - act
+
+  template-docker-build:
+    dir: "{{ .ROOT_DIR }}/flow-template"
+    cmds:
+      - docker build -t flow-template .
+
+  template-docker-sh:
+    dir: "{{ .ROOT_DIR }}/flow-template"
+    cmds:
+      - docker run -it --rm flow-template /bin/bash
+
+  template-lint:
+    dir: "{{ .ROOT_DIR }}/flow-template"
+    cmds:
+      - uv run ruff check .
+      - uv run ty check .
+
+  lint:
+    cmds:
+      - task template-lint
