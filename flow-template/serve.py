@@ -1,10 +1,8 @@
-import os
 import socket
+import os
 
 from kawa.module import Module
 from kawa.utils import json_encode
-
-import os
 
 SOCKET_PATH = os.environ.get("KAWAFLOW_SOCKET_PATH", "/var/run/kawaflow.sock")
 
