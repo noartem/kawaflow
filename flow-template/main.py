@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 
-from kawa.core import Actor, Event, Context, NotSupportedEvent
+from kawa.core import Actor, Context, Event, NotSupportedEvent
 from kawa.cron import CronEvent
 from kawa.email import SendEmailEvent
 

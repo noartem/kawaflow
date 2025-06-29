@@ -1,5 +1,5 @@
 import sys
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 from types import get_original_bases
@@ -41,7 +41,7 @@ EventFilterT = TypeVar("EventFilterT", bound=Event)
 EventFilterContext = dict[str, str]
 
 
-class EventFilter(Generic[EventFilterT]):
+class EventFilter(Generic[EventFilterT], ABC):
     @abstractmethod
     def __call__(event: EventFilterT) -> bool:
         pass
@@ -61,6 +61,9 @@ EventClassOrFilter = Union[type[Event], type[EventFilter]]
 
 def get_event_from_event_filter(eventFilter: EventFilter):
     forward_ref = get_args(get_original_bases(eventFilter.__class__)[0])[0]
+
+    if isinstance(forward_ref, type):
+        return forward_ref
 
     globalns = sys.modules[eventFilter.__class__.__module__].__dict__
     localns = {}
@@ -158,15 +161,15 @@ class Actor:
         definition = ActorDefinition(
             id=get_actor_uuid(funcOrClass),
             name=funcOrClass.__name__,
-            doc=untab_string(funcOrClass.__doc__).strip(),
+            doc=untab_string(funcOrClass.__doc__ or "").strip(),
             funcOrClass=funcOrClass,
             receivs=[
                 ActorReceiveEventDefinition.fromEventClassOrFilter(receive)
-                for receive in getattr(self, "receivs", tuple())
+                for receive in (self.receivs if self.receivs is not None else tuple())
             ],
             sends=[
                 ActorSendEventDefinition.fromEventClass(send)
-                for send in getattr(self, "sends", tuple())
+                for send in (self.sends if self.sends is not None else tuple())
             ],
             min_instances=self.min_instances,
             max_instances=self.max_instances,

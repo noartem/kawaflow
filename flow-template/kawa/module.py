@@ -1,10 +1,12 @@
-import re
 import importlib
 import importlib.util
+import re
 import sys
-from kawa.core import ActorDefinition, EventDefinition, Event, NotSupportedEvent
+
+from kawa.core import ActorDefinition, Event, EventDefinition, NotSupportedEvent
 from kawa.cron import CronEvent
 from kawa.utils import get_event_uuid
+
 
 def import_from_path(module_name, file_path):
     spec = importlib.util.spec_from_file_location(module_name, file_path)
@@ -32,12 +34,17 @@ class Module:
 
         self.actors = {}
         self.events = {}
+        self._loaded = False
         self._load()
 
         self.commands: list[str] = []
+        self._loaded_commands = False
         self._load_commands()
 
     def _load(self):
+        if self._loaded:
+            return
+
         module = import_from_path("", self.path)
 
         for attr_name in dir(module):
@@ -66,8 +73,13 @@ class Module:
                     continue
                 self.events[eventDef.id] = eventDef
 
+        self._loaded = True
+
     def _load_commands(self):
-        HASHBANG_PATTERN = re.compile(r"^#!(.*)")
+        if self._loaded_commands:
+            return
+
+        HASHBANG_PATTERN = re.compile(r"^#!\s(.*)")
 
         with open(self.path, "r", encoding="utf-8") as file:
             for line in file:
@@ -77,6 +89,8 @@ class Module:
 
                 command = match.group(1).strip()
                 self.commands.append(command)
+
+        self._loaded_commands = True
 
     def _dump_event(self, event: EventDefinition):
         return {

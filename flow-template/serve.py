@@ -1,14 +1,19 @@
-import socket
 import os
+import socket
+
 from kawa.module import Module
 from kawa.utils import json_encode
 
-SOCKET_PATH = "/var/run/kawaflow.sock"
+import os
+
+SOCKET_PATH = os.environ.get("KAWAFLOW_SOCKET_PATH", "/var/run/kawaflow.sock")
+
 
 def handle_command(command: str, module: Module):
     if command == "dump":
         return module.dump()
     return {"error": "unknown command"}
+
 
 def main():
     module = Module("main.py")
@@ -30,6 +35,7 @@ def main():
                 command = data.decode().strip()
                 response = handle_command(command, module)
                 conn.sendall(json_encode(response).encode())
+
 
 if __name__ == "__main__":
     main()
