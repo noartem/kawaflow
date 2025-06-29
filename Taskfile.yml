@@ -2,15 +2,10 @@
 
 version: "3"
 
-vars:
-  GREETING: Hello, World!
+includes:
+  private: ./Taskfile.private.yml
 
 tasks:
-  default:
-    cmds:
-      - echo "{{.GREETING}}"
-    silent: true
-
   act:
     cmds:
       - act
@@ -23,7 +18,7 @@ tasks:
   template-docker-sh:
     dir: "{{ .ROOT_DIR }}/flow-template"
     cmds:
-      - docker run -it --rm flow-template /bin/bash
+      - docker run -it --rm -v /var/run/kawaflow.sock:/var/run/kawaflow.sock flow-template /bin/bash
 
   template-lint:
     dir: "{{ .ROOT_DIR }}/flow-template"
@@ -37,4 +32,3 @@ tasks:
   
   repomix:
     cmd: npx repomix
-      

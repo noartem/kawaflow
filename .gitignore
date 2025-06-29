@@ -5,3 +5,5 @@
 node_modules/
 
 repomix-output.xml
+
+Taskfile.private.yml
