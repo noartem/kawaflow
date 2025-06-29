@@ -18,17 +18,47 @@ tasks:
   template-docker-sh:
     dir: "{{ .ROOT_DIR }}/flow-template"
     cmds:
-      - docker run -it --rm -v /var/run/kawaflow.sock:/var/run/kawaflow.sock flow-template /bin/bash
+      - docker run -it --rm -v .:/app flow-template /bin/bash
+
+  template-docker-sh-exec:
+    dir: "{{ .ROOT_DIR }}/flow-template"
+    cmd: docker run --rm -v .:/app -v /var/run/kawaflow.sock:/var/run/kawaflow.sock flow-template /bin/bash -c "{{.CLI_ARGS}}"
 
   template-lint:
-    dir: "{{ .ROOT_DIR }}/flow-template"
     cmds:
-      - uv run ruff check .
-      - uv run ty check .
+      - task: template-docker-sh-exec
+        vars:
+          CLI_ARGS: uv run ruff check .
+      # - task: template-docker-sh-exec
+      #   vars:
+      #     CLI_ARGS: uv run ty check
+
+  template-lint-fix:
+    cmds:
+      - task: template-docker-sh-exec
+        vars:
+          CLI_ARGS: uv run ruff format
+      - task: template-docker-sh-exec
+        vars:
+          CLI_ARGS: uv run ruff check --fix .
+
+  template-test:
+    cmds:
+      - task: template-docker-sh-exec
+        vars:
+          CLI_ARGS: KAWAFLOW_SOCKET_PATH=/tmp/kawaflow.sock PYTHONPATH=/app uv run pytest
+
+  test:
+    cmds:
+      - task template-test
 
   lint:
     cmds:
       - task template-lint
+
+  lint-fix:
+    cmds:
+      - task template-lint-fix
   
   repomix:
     cmd: npx repomix

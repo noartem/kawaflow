@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  lint:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,8 +17,11 @@ jobs:
       - name: Install Task
         uses: arduino/setup-task@v2
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
+      - name: Build flow-template Docker image
+        run: task template-docker-build
 
-      - name: Check flow-template
+      - name: Run lint checks
         run: task lint
+
+      - name: Run tests
+        run: task test
