@@ -8,8 +8,4 @@ COPY uv.lock .
 
 RUN uv sync --locked
 
-
-COPY kawa/ ./kawa/
-COPY serve.py .
-COPY main.py .
-
+COPY . .
