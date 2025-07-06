@@ -64,4 +64,4 @@ tasks:
 
   gemini:
     cmds:
-      - gemini
+      - npx gemini
