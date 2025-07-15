@@ -1,0 +1,16 @@
+.git
+.gitignore
+
+Dockerfile
+.dockerignore
+
+**/__pycache__
+**/.ruff_cache
+**/.venv
+**/.pytest_cache
+
+*.pyc
+*.pyo
+*.pyd
+
+node_modules/

@@ -1,0 +1,26 @@
+[project]
+name = "flow-manager"
+version = "0.1.0"
+description = "A WebSocket service to manage Docker containers."
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "python-socketio",
+    "docker",
+]
+
+[tool.ruff]
+line-length = 88
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "pytest-asyncio",
+    "python-socketio[client]",
+    "ruff>=0.12.3",
+    "ty>=0.0.1a14",
+]

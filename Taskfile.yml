@@ -13,55 +13,106 @@ tasks:
     cmds:
       - act
 
-  template-docker-build:
-    dir: "{{ .ROOT_DIR }}/flow-template"
-    cmds:
-      - docker build -t flow-template .
+  flow-build:
+    dir: flow
+    cmd: docker build -t flow .
 
-  template-docker-sh:
-    dir: "{{ .ROOT_DIR }}/flow-template"
-    cmds:
-      - docker run -it --rm -v .:/app flow-template /bin/bash
+  flow-sh:
+    dir: flow
+    deps:
+      - flow-build
+    cmd: docker run -it --rm -v .:/app flow /bin/bash
 
-  template-docker-sh-exec:
-    dir: "{{ .ROOT_DIR }}/flow-template"
-    cmd: docker run --rm -v .:/app -v /var/run/kawaflow.sock:/var/run/kawaflow.sock flow-template /bin/bash -c "{{.CLI_ARGS}}"
+  flow-sh-exec:
+    dir: flow
+    deps:
+      - flow-build
+    cmd: docker run --rm -v .:/app -v /var/run/kawaflow.sock:/var/run/kawaflow.sock flow /bin/bash -c "{{.CLI_ARGS}}"
 
-  template-lint:
+  flow-lint:
     cmds:
-      - task: template-docker-sh-exec
+      - task: flow-sh-exec
         vars:
           CLI_ARGS: uv run ruff check .
-      # - task: template-docker-sh-exec
+      # - task: flow-sh-exec
       #   vars:
       #     CLI_ARGS: uv run ty check
 
-  template-lint-fix:
+  flow-lint-fix:
     cmds:
-      - task: template-docker-sh-exec
+      - task: flow-sh-exec
         vars:
           CLI_ARGS: uv run ruff format
-      - task: template-docker-sh-exec
+      - task: flow-sh-exec
         vars:
           CLI_ARGS: uv run ruff check --fix .
 
-  template-test:
+  flow-test:
     cmds:
-      - task: template-docker-sh-exec
+      - task: flow-sh-exec
         vars:
           CLI_ARGS: KAWAFLOW_SOCKET_PATH=/tmp/kawaflow.sock PYTHONPATH=/app uv run pytest
 
+  flow-manager-build:
+    dir: flow-manager
+    cmds:
+      - docker build -t flow-manager .
+
+  flow-manager-sh:
+    dir: flow-manager
+    deps:
+      - flow-manager-build
+    cmd: docker run -it --rm -v .:/app flow-manager /bin/bash
+
+  flow-manager-sh-exec:
+    dir: flow-manager
+    deps:
+      - flow-build
+    cmd: docker run --rm -v .:/app flow-manager /bin/bash -c "{{.CLI_ARGS}}"
+
+  flow-manager-lint:
+    cmds:
+      - task: flow-manager-sh-exec
+        vars:
+          CLI_ARGS: uv run ruff check .
+      # - task: flow-sh-exec
+      #   vars:
+      #     CLI_ARGS: uv run ty check
+
+  flow-manager-lint-fix:
+    cmds:
+      - task: flow-manager-sh-exec
+        vars:
+          CLI_ARGS: uv run ruff format
+      - task: flow-manager-sh-exec
+        vars:
+          CLI_ARGS: uv run ruff check --fix .
+
+  flow-manager-test:
+    cmds:
+      - task: flow-manager-sh-exec
+        vars:
+          CLI_ARGS: PYTHONPATH=/app uv run pytest
+
+  build:
+    cmds:
+      - task: flow-build
+      - task: flow-manager-build
+
   test:
     cmds:
-      - task template-test
+      - task: flow-test
+      - task: flow-manager-test
 
   lint:
     cmds:
-      - task template-lint
+      - task: flow-lint
+      - task: flow-manager-lint
 
   lint-fix:
     cmds:
-      - task template-lint-fix
+      - task: flow-lint-fix
+      - task: flow-manager-lint-fix
 
   repomix:
     cmd: npx repomix

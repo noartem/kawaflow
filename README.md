@@ -5,7 +5,7 @@
 - [ ] flow-template
   - [ ] Socket
   - [ ] Commands
-- [ ] flows-managers
+- [ ] flow-managers
 - [ ] laravel app
 - [ ] TimeoutEvent
 - [ ] IntervalEvent
