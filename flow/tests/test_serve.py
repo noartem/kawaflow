@@ -87,9 +87,7 @@ def test_main_socket_remove_exists(
 
 @patch("serve.os.path.exists", return_value=False)
 @patch("serve.os.remove")
-def test_main_socket_bind_error(
-    mock_remove, mock_exists, mock_module, setup_socket
-):
+def test_main_socket_bind_error(mock_remove, mock_exists, mock_module, setup_socket):
     with patch("socket.socket", autospec=True) as mock_socket_class:
         mock_socket_instance = mock_socket_class.return_value.__enter__.return_value
         mock_socket_instance.bind.side_effect = OSError("Bind error")
