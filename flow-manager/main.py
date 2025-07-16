@@ -1,5 +1,6 @@
 import socketio
 import docker
+from docker.errors import ImageNotFound, NotFound
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -31,7 +32,7 @@ async def start_container(sid, data):
             {"id": container.id, "name": container.name},
             to=sid,
         )
-    except docker.errors.ImageNotFound:
+    except ImageNotFound:
         await sio.emit("error", {"message": f"Image '{image}' not found"}, to=sid)
     except Exception as e:
         await sio.emit("error", {"message": str(e)}, to=sid)
@@ -49,7 +50,7 @@ async def stop_container(sid, data):
         container = client.containers.get(container_id)
         container.stop()
         await sio.emit("container_stopped", {"id": container.id}, to=sid)
-    except docker.errors.NotFound:
+    except NotFound:
         await sio.emit(
             "error", {"message": f"Container '{container_id}' not found"}, to=sid
         )
