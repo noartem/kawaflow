@@ -67,7 +67,7 @@ tasks:
   flow-manager-sh-exec:
     dir: flow-manager
     deps:
-      - flow-build
+      - flow-manager-build
     cmd: docker run --rm -v .:/app flow-manager /bin/bash -c "{{.CLI_ARGS}}"
 
   flow-manager-lint:
