@@ -34,9 +34,9 @@ tasks:
       - task: flow-sh-exec
         vars:
           CLI_ARGS: uv run ruff check .
-      # - task: flow-sh-exec
-      #   vars:
-      #     CLI_ARGS: uv run ty check
+      - task: flow-sh-exec
+        vars:
+          CLI_ARGS: uv run ty check
 
   flow-lint-fix:
     cmds:
@@ -75,9 +75,9 @@ tasks:
       - task: flow-manager-sh-exec
         vars:
           CLI_ARGS: uv run ruff check .
-      # - task: flow-sh-exec
-      #   vars:
-      #     CLI_ARGS: uv run ty check
+      - task: flow-manager-sh-exec
+        vars:
+          CLI_ARGS: uv run ty check
 
   flow-manager-lint-fix:
     cmds:

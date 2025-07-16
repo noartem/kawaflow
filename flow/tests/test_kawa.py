@@ -141,14 +141,17 @@ def test_actor_decorator():
 
 
 def test_actor_decorator_with_min_max_keep_instances():
-    @Actor(min_instances=1, max_instances=5, keep_instance=timedelta(minutes=10))
     class MyActor:
         def __call__(self, ctx: Context, event: Event):
             pass
 
-    assert MyActor.min_instances == 1
-    assert MyActor.max_instances == 5
-    assert MyActor.keep_instance == timedelta(minutes=10)
+    MyActorDefinition = Actor(
+        min_instances=1, max_instances=5, keep_instance=timedelta(minutes=10)
+    )(MyActor)
+
+    assert MyActorDefinition.min_instances == 1
+    assert MyActorDefinition.max_instances == 5
+    assert MyActorDefinition.keep_instance == timedelta(minutes=10)
 
 
 def test_event_definition_from_event_class():
