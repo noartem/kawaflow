@@ -4,7 +4,7 @@ import os
 from kawa.module import Module
 from kawa.utils import json_encode
 
-SOCKET_PATH = os.environ.get("KAWAFLOW_SOCKET_PATH", "/var/run/kawaflow.sock")
+SOCKET_PATH = os.environ.get("SOCKET_PATH", "/var/run/kawaflow.sock")
 
 
 def handle_command(command: str, module: Module):

@@ -1,3 +1,10 @@
 {
-    "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "kiroAgent.trustedCommands": [
+    "task *",
+    "docker *",
+    "npx *",
+    "mkdir *",
+    "rmdir *"
+  ]
 }
