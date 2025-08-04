@@ -22,8 +22,7 @@ from .utils import (
 )
 
 
-class Event:
-    pass
+
 
 
 @final
@@ -147,17 +146,16 @@ class ActorDefinition:
     keep_instance: timedelta
 
 
-@dataclass
-class Actor:
-    receivs: Optional[tuple[EventClassOrFilter, ...]] = None
-    sends: Optional[tuple[type[Event], ...]] = None
-    min_instances: Optional[int] = None
-    max_instances: Optional[int] = None
-    keep_instance: Optional[timedelta] = None
+def Actor(
+    receivs: Optional[tuple[EventClassOrFilter, ...]] = None,
+    sends: Optional[tuple[type[Event], ...]] = None,
+    min_instances: Optional[int] = None,
+    max_instances: Optional[int] = None,
+    keep_instance: Optional[timedelta] = None,
+):
+    def decorator(funcOrClass: ActorProtocol):
+        from . import module
 
-    funcOrClass: Optional[ActorProtocol] = None
-
-    def __call__(self, funcOrClass):
         definition = ActorDefinition(
             id=get_actor_uuid(funcOrClass),
             name=funcOrClass.__name__,
@@ -165,18 +163,20 @@ class Actor:
             funcOrClass=funcOrClass,
             receivs=[
                 ActorReceiveEventDefinition.fromEventClassOrFilter(receive)
-                for receive in (self.receivs if self.receivs is not None else tuple())
+                for receive in (receivs if receivs is not None else tuple())
             ],
             sends=[
                 ActorSendEventDefinition.fromEventClass(send)
-                for send in (self.sends if self.sends is not None else tuple())
+                for send in (sends if sends is not None else tuple())
             ],
-            min_instances=self.min_instances,
-            max_instances=self.max_instances,
-            keep_instance=self.keep_instance,
+            min_instances=min_instances,
+            max_instances=max_instances,
+            keep_instance=keep_instance,
         )
+        module.register_actor(definition)
+        return funcOrClass
 
-        return definition
+    return decorator
 
 
 @dataclass
