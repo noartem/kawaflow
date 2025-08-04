@@ -5,6 +5,9 @@ version: "3"
 dotenv: [".env"]
 
 includes:
+  docs:
+    taskfile: ./docs/Taskfile.yml
+    dir: ./docs
   flow:
     taskfile: ./flow/Taskfile.yml
     dir: ./flow
@@ -35,6 +38,7 @@ tasks:
   build:
     desc: Build all services
     cmds:
+      - task: docs:build
       - task: flow:build
       - task: flow-manager:build
 

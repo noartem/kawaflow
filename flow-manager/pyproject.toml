@@ -8,6 +8,8 @@ dependencies = [
     "uvicorn",
     "python-socketio",
     "docker",
+    "pydantic",
+    "httpx",
 ]
 
 [tool.ruff]
