@@ -154,7 +154,7 @@ def Actor(
     keep_instance: Optional[timedelta] = None,
 ):
     def decorator(funcOrClass: ActorProtocol):
-        from . import module
+        from . import system
 
         definition = ActorDefinition(
             id=get_actor_uuid(funcOrClass),
@@ -173,7 +173,7 @@ def Actor(
             max_instances=max_instances,
             keep_instance=keep_instance,
         )
-        module.register_actor(definition)
+        system.register_actor(definition)
         return funcOrClass
 
     return decorator

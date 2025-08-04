@@ -6,7 +6,7 @@ from kawa.utils import get_event_uuid
 
 
 
-class Module:
+class System:
     _PRIVATE_EVENTS = (
         get_event_uuid(NotSupportedEvent),
         get_event_uuid(CronEvent),

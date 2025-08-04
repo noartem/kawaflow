@@ -1,10 +1,10 @@
 from .core import Actor
-from .module import Module
+from .system import System
 
-__all__ = ["Actor", "Event", "Module"]
+__all__ = ["Actor", "Event", "System"]
 
-module = Module()
+system = System()
 
 def Event(cls):
-    module.register_event(cls)
+    system.register_event(cls)
     return cls
