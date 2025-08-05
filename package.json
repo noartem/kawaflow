@@ -18,7 +18,7 @@
   "homepage": "https://github.com/noartem/kawaflow#readme",
   "description": "",
   "dependencies": {
-    "@google/gemini-cli": "^0.1.9",
+    "@google/gemini-cli": "^0.1.17",
     "repomix": "^0.3.9"
   }
 }
