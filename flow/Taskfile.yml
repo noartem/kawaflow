@@ -6,5 +6,15 @@ tasks:
     dir: ../
     cmd: docker build -t flow -f flow/Dockerfile .
 
+  sh:
+    cmd: docker run --rm -it -v .:/app flow /bin/bash
+
+  sh-exec:
+    cmd: docker run --rm -v .:/app flow /bin/bash -c '{{.CLI_ARGS}}'
+    internal: true
+
   test:
-    cmd: docker run --rm -it flow /bin/bash -c 'uv run python -c "from kawa import registry; print(registry.dump()); from kawa.serve import serve; print(serve)"'
+    cmds:
+      - task: sh-exec
+        vars:
+          CLI_ARGS: uv run --with=/tmp/kawa test.py
