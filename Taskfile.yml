@@ -5,6 +5,9 @@ version: "3"
 dotenv: [".env"]
 
 includes:
+  npm:
+    taskfile: ./npm.Taskfile.yml
+    dir: .
   docs:
     taskfile: ./docs/Taskfile.yml
     dir: ./docs
@@ -22,16 +25,15 @@ tasks:
   init:
     desc: Initialize the project
     cmds:
-      - npm install
+      - task: npm:init
 
   repomix:
-    desc: Run repomix code analysis
-    cmd: npx repomix
+    cmds:
+      - task: npm:repomix
 
   gemini:
-    desc: Run Google Gemini CLI
     cmds:
-      - npx gemini
+      - task: npm:gemini
 
   act:
     desc: Run GitHub Actions locally

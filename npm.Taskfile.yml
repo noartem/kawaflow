@@ -1,0 +1,25 @@
+# https://taskfile.dev
+
+version: "3"
+
+tasks:
+  init:
+    cmd: npm install
+
+  check-updates:
+    cmd: npx -y npm-check-updates
+
+  install-updates:
+    cmds:
+      - npx -y npm-check-updates -u
+      - npm install
+
+  gemini:
+    desc: Run Google Gemini CLI
+    cmds:
+      - npx gemini
+
+  repomix:
+    desc: Run repomix CLI
+    cmds:
+      - npx repomix
