@@ -1,6 +1,3 @@
-.git
-.gitignore
-
 Dockerfile
 .dockerignore
 
@@ -13,6 +10,5 @@ Dockerfile
 *.pyo
 *.pyd
 
-node_modules/
-
-tests/
+build/
+kawa.egg-info/

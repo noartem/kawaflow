@@ -1,21 +1,19 @@
 import socket
 import os
 
-from kawa.module import Module
+from kawa import registry
 from kawa.utils import json_encode
 
 SOCKET_PATH = os.environ.get("SOCKET_PATH", "/var/run/kawaflow.sock")
 
 
-def handle_command(command: str, module: Module):
+def handle_command(command: str):
     if command == "dump":
-        return module.dump()
+        return registry.dump()
     return {"error": "unknown command"}
 
 
-def main():
-    module = Module("main.py")
-
+def serve():
     if os.path.exists(SOCKET_PATH):
         os.remove(SOCKET_PATH)
 
@@ -31,9 +29,5 @@ def main():
                 if not data:
                     break
                 command = data.decode().strip()
-                response = handle_command(command, module)
+                response = handle_command(command)
                 conn.sendall(json_encode(response).encode())
-
-
-if __name__ == "__main__":
-    main()

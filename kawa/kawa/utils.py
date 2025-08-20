@@ -18,6 +18,9 @@ class HasName(Protocol):
 
 
 def get_object_key(obj: HasName) -> str:
+    if not hasattr(obj, "__name__"):
+        obj = obj.__class__
+
     module_name = obj.__module__
     module = modules[module_name]
     file_path = getattr(module, "__file__", module_name)
@@ -43,3 +46,7 @@ class TimedeltaEncoder(json.JSONEncoder):
 
 def json_encode(obj):
     return json.dumps(obj, indent=4, cls=TimedeltaEncoder)
+
+
+def json_decode(s: str):
+    return json.loads(s)
