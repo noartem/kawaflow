@@ -70,7 +70,7 @@ def test_actor_receive_event_definition():
 def test_actor_send_event_definition():
     definition = ActorSendEventDefinition(AnotherEvent)
     assert definition.name == "AnotherEvent"
-    assert definition.doc == ""
+    assert definition.doc == "AnotherEvent()"
 
 
 def test__actor_definition_from_function():

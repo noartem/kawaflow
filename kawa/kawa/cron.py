@@ -1,10 +1,12 @@
 from datetime import datetime
+from dataclasses import dataclass
 
 from .core import EventFilter
 from .main import event
 
 
 @event
+@dataclass
 class CronEvent:
     template: str
     datetime: datetime
