@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "check-updates": "npx -y npm-check-updates", 
+    "install-updates": "npx -y npm-check-updates -u", 
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,7 +20,7 @@
   "homepage": "https://github.com/noartem/kawaflow#readme",
   "description": "",
   "dependencies": {
-    "@google/gemini-cli": "^0.1.17",
-    "repomix": "^0.3.9"
+    "@google/gemini-cli": "^0.1.22",
+    "repomix": "^1.3.0"
   }
 }
