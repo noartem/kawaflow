@@ -2,7 +2,7 @@
 **/.ruff_cache
 **/.venv
 **/.pytest_cache
-
+**/*.egg-info/
 node_modules/
 
 .env

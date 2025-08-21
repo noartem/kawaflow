@@ -1,5 +1,0 @@
-{{ FILE }}
-
-if __name__ == '__main__':
-    from kawa.serve import serve
-    print(serve)
