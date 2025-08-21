@@ -26,4 +26,3 @@ Example task commands:
 - `task kawa:test` - test `/kawa`
 
 **Important**: Do not use `task ...:sh` - you will stuck in this command because it will start bash terminal. If you want to run a command in container use `task ...:sh-exec -- ...` or create new task in related Taskfile.
-
