@@ -1,3 +1,3 @@
 # KawaFlow
 
-Welcome to the Flow Manager documentation.
+Welcome to the KawaFlow documentation.
