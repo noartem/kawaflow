@@ -39,7 +39,7 @@ inclusion: always
 ## Testing Tools
 
 - Use pytest as the primary testing framework
-- Run tests using the task runner: `task test`, `task flow:test`, or `task flow-manager:test`
+- Run tests using the task runner: `task test`, `task kawa:test`, `task flow:test`, or `task flow-manager:test`
 - Execute tests in Docker containers using the appropriate task commands
 - **IMPORTANT**: All project commands should be run using Taskfile
 
@@ -48,8 +48,9 @@ inclusion: always
 **Run all tests:**
 
 ```bash
-task test                    # Run all tests for both services
-task flow:test              # Run only flow service tests
+task test                    # Run all tests for all components
+task kawa:test              # Run only Kawa framework tests
+task flow:test              # Run only flow examples tests (validates Kawa functionality)
 task flow-manager:test      # Run only flow-manager service tests
 ```
 
@@ -57,20 +58,23 @@ task flow-manager:test      # Run only flow-manager service tests
 
 ```bash
 # Run specific test file
-task flow:test -- tests/test_actors.py
+task kawa:test -- tests/test_actors.py
 task flow-manager:test -- tests/test_api.py
 
 # Run specific test function or class
-task flow:test -- tests/test_actors.py::TestActorSystem::test_actor_creation
+task kawa:test -- tests/test_actors.py::TestActorSystem::test_actor_creation
 task flow-manager:test -- tests/test_api.py::test_websocket_connection
 
 # Run tests matching a pattern
-task flow:test -- -k "email"
+task kawa:test -- -k "email"
 task flow-manager:test -- -k "container"
 
 # Run with verbose output
-task flow:test -- tests/ -v
+task kawa:test -- tests/ -v
 task flow-manager:test -- tests/ -v --tb=short
+
+# Flow examples testing (runs test.py validation script)
+task flow:test              # Validates Kawa framework integration
 ```
 
 All test commands support standard pytest arguments and options.

@@ -24,10 +24,10 @@
 
 **Task** - Task runner for build automation
 
-- Defined in Taskfiles (root, flow, and flow-manager directories)
+- Defined in Taskfiles (root, docs, flow, flow-manager, kawa, and npm directories)
 - Handles Docker builds, testing, linting, and development workflows
 - **IMPORTANT**: All project commands should be run using Taskfile
-- **NOTE**: When using sub-folder taskfiles, do NOT use `cd` commands. Instead, use the namespace prefix format: `task flow:test` or `task flow-manager:test`
+- **NOTE**: When using sub-folder taskfiles, do NOT use `cd` commands. Instead, use the namespace prefix format: `task flow:test`, `task flow-manager:test`, or `task kawa:test`
 
 ## Development Tools
 
@@ -42,16 +42,19 @@
 ```bash
 task init          # Install dependencies
 task build         # Build all Docker images
-task flow:build    # Build flow service
+task docs:build    # Build documentation
+task flow:build    # Build flow examples container
 task flow-manager:build  # Build flow-manager service
+task kawa:build    # Build kawa framework container
 ```
 
 ### Testing & Quality
 
 ```bash
 task test          # Run all tests
-task flow:test     # Run flow service tests
+task flow:test     # Run flow examples tests (Kawa framework validation)
 task flow-manager:test  # Run flow-manager service tests
+task kawa:test     # Run kawa framework tests
 task lint          # Run linting on all services
 task lint-fix      # Auto-fix linting issues
 ```
@@ -62,17 +65,20 @@ The test commands support pytest arguments for running specific tests:
 
 ```bash
 # Run specific test file
-task flow:test -- tests/test_actors.py
+task kawa:test -- tests/test_actors.py
 task flow-manager:test -- tests/test_api.py
 
 # Run specific test function
-task flow:test -- tests/test_actors.py::test_specific_function
+task kawa:test -- tests/test_actors.py::test_specific_function
 task flow-manager:test -- tests/test_api.py::test_websocket_connection
 
 # Run with pytest options
-task flow:test -- tests/ -v
-task flow:test -- tests/ -k "email"
+task kawa:test -- tests/ -v
+task kawa:test -- tests/ -k "email"
 task flow-manager:test -- tests/ --tb=short
+
+# Flow examples testing (runs test.py script)
+task flow:test  # Validates Kawa framework functionality
 ```
 
 ### Execute Shell Commands
@@ -80,6 +86,7 @@ task flow-manager:test -- tests/ --tb=short
 ```bash
 task flow:sh-exec -- "echo 'foo'"
 task flow-manager:sh-exec -- "echo 'bar'"
+task kawa:sh-exec -- "echo 'baz'"
 ```
 
 ### Python Dependency Management
@@ -88,25 +95,27 @@ task flow-manager:sh-exec -- "echo 'bar'"
 
 ```bash
 # Add new dependencies
-task flow:sh-exec -- "uv add package-name"
+task kawa:sh-exec -- "uv add package-name"
 task flow-manager:sh-exec -- "uv add package-name"
 
 # Add development dependencies
-task flow:sh-exec -- "uv add --dev pytest-package"
+task kawa:sh-exec -- "uv add --dev pytest-package"
 task flow-manager:sh-exec -- "uv add --dev pytest-package"
 
 # Remove dependencies
-task flow:sh-exec -- "uv remove package-name"
+task kawa:sh-exec -- "uv remove package-name"
 task flow-manager:sh-exec -- "uv remove package-name"
 
 # Update dependencies
-task flow:sh-exec -- "uv lock --upgrade"
+task kawa:sh-exec -- "uv lock --upgrade"
 task flow-manager:sh-exec -- "uv lock --upgrade"
 
 # Install dependencies from lock file
-task flow:sh-exec -- "uv sync"
+task kawa:sh-exec -- "uv sync"
 task flow-manager:sh-exec -- "uv sync"
 ```
+
+**Note**: The `flow` directory contains examples and test scripts that use Kawa as a dependency, so dependency management is primarily done in the `kawa` and `flow-manager` services.
 
 **Never install Python packages directly on the host system** - always use UV within the appropriate service container.
 
@@ -116,10 +125,10 @@ task flow-manager:sh-exec -- "uv sync"
 
 ### Execution Rules
 
-- Use `task flow:sh-exec` or `task flow-manager:sh-exec` for running commands
-- All tests run via `task test`, `task flow:test`, or `task flow-manager:test`
+- Use `task kawa:sh-exec`, `task flow:sh-exec`, or `task flow-manager:sh-exec` for running commands
+- All tests run via `task test`, `task flow:test`, `task flow-manager:test`, or `task kawa:test`
 - Linting and formatting via `task lint` and `task lint-fix`
-- **IMPORTANT**: Never use `cd flow/ && task test` - always use the namespace prefix format: `task flow:test`
+- **IMPORTANT**: Never use `cd kawa/ && task test` - always use the namespace prefix format: `task kawa:test`
 - **Testing & Validation**: When you need to test code, imports, or functionality, create test files or temporary scripts and run them using Docker containers via the appropriate task commands
 
 ### Why Docker-Only Development
@@ -132,7 +141,8 @@ task flow-manager:sh-exec -- "uv sync"
 
 ## Architecture Patterns
 
-- **Event-driven architecture** with custom actor system
-- **Microservices** - Separate flow and flow-manager services
-- **Containerized development** - All services run in Docker
-- **Socket-based communication** for real-time updates
+- **Event-driven architecture** with custom Kawa actor system
+- **Package-based architecture** - Kawa as reusable framework, flow-manager as service
+- **Containerized development** - All components run in Docker
+- **WebSocket-based communication** for real-time container management
+- **Example-driven development** - Flow directory contains usage examples
