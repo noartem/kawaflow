@@ -11,9 +11,6 @@ includes:
   flow:
     taskfile: ./flow/Taskfile.yml
     dir: ./flow
-  flow-manager:
-    taskfile: ./flow-manager/Taskfile.yml
-    dir: ./flow-manager
   kawa:
     taskfile: ./kawa/Taskfile.yml
     dir: ./kawa
@@ -26,12 +23,12 @@ tasks:
 
   repomix:
     desc: Run repomix code analysis
-    cmd: npx repomix
+    cmd: npx -y repomix
 
   gemini:
     desc: Run Google Gemini CLI
     cmds:
-      - npx gemini
+      - npx -y gemini
 
   act:
     desc: Run GitHub Actions locally
