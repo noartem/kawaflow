@@ -2,3 +2,8 @@
 # Example:
 # *.log
 # tmp/
+
+.repomixignore
+repomix*
+
+tests/
