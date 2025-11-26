@@ -5,7 +5,6 @@ This module tests the Socket.IO event handlers for resource monitoring functiona
 including threshold management, resource usage history, and monitoring control.
 """
 
-import asyncio
 import tempfile
 from unittest.mock import AsyncMock, Mock, patch
 

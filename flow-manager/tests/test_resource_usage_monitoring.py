@@ -10,14 +10,13 @@ This module tests the enhanced resource usage monitoring features including:
 
 import asyncio
 import tempfile
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import pytest_asyncio
 
 from container_manager import ContainerManager
-from models import ContainerState
 
 
 class TestResourceUsageMonitoring:

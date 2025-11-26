@@ -26,8 +26,6 @@ from models import (
     UpdateContainerEvent,
     SendMessageEvent,
     ErrorResponse,
-    HealthCheckConfig,
-    HealthCheckConfigEvent,
 )
 
 
@@ -847,7 +845,7 @@ class SocketIOEventHandler:
             await self.user_logger.log_user_activity(
                 "resource_thresholds_updated",
                 "system",
-                f"Resource thresholds updated",
+                "Resource thresholds updated",
                 {"thresholds": thresholds},
             )
 

@@ -1,13 +1,11 @@
-FROM python:3.12-slim
+FROM python:3.12-slim-bookworm
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
-RUN pip install uv ruff
+COPY pyproject.toml .
+COPY uv.lock .
 
-COPY pyproject.toml ./
-
-RUN uv pip install --system -e .[test]
+RUN uv sync --locked
 
 COPY . .
-
-CMD ["ruff", "check", "."]

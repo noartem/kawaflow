@@ -11,17 +11,17 @@ dependencies = [
     "httpx",
 ]
 
-[tool.ruff]
-line-length = 88
-
-[tool.mypy]
-ignore_missing_imports = true
-
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest",
     "pytest-asyncio",
     "python-socketio[client]",
     "ruff>=0.12.3",
     "ty>=0.0.1a14",
 ]
+
+[tool.ruff]
+line-length = 88
+
+[tool.mypy]
+ignore_missing_imports = true

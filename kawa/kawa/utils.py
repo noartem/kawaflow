@@ -2,7 +2,7 @@ import json
 import re
 from datetime import timedelta
 from sys import modules
-from typing import Protocol
+from typing import Protocol, Any
 from uuid import NAMESPACE_DNS, UUID, uuid5
 
 actors_namespace = uuid5(NAMESPACE_DNS, "actors")
@@ -36,7 +36,7 @@ def get_event_uuid(obj: HasName) -> UUID:
 
 
 class TimedeltaEncoder(json.JSONEncoder):
-    def default(self, obj):
+    def default(self, obj: Any):
         if isinstance(obj, timedelta):
             return int(obj.total_seconds())
         elif isinstance(obj, UUID):

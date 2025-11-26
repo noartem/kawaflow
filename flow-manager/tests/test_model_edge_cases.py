@@ -6,12 +6,11 @@ particularly focusing on type conversions and validations.
 """
 
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime
 from pydantic import ValidationError
 from models import (
     ContainerState,
     ContainerHealth,
-    ContainerConfig,
     ContainerInfo,
     ContainerStatus,
 )

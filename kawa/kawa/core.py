@@ -82,6 +82,9 @@ class ActorSendEventDefinition:
             doc = ""
         doc = untab_string(doc).strip()
 
+        if doc == f"{eventClass.__name__}()":
+            doc = ""
+
         self.id = get_event_uuid(eventClass)
         self.name = eventClass.__name__
         self.doc = doc

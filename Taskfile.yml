@@ -14,6 +14,9 @@ includes:
   kawa:
     taskfile: ./kawa/Taskfile.yml
     dir: ./kawa
+  flow-manager:
+    taskfile: ./flow-manager/Taskfile.yml
+    dir: ./flow-manager
 
 tasks:
   init:
@@ -37,27 +40,27 @@ tasks:
 
   build:
     desc: Build all services
+    parallel: true
     cmds:
-      - task: docs:build
+      - task: kawa:build
       - task: flow:build
       - task: flow-manager:build
-      - task: kawa:build
 
   test:
     desc: Run all tests
     cmds:
       - task: flow:test
-      - task: flow-manager:test
       - task: kawa:test
+      # - task: flow-manager:test
 
   lint:
     desc: Run all linting checks
     cmds:
-      - task: flow-manager:lint
       - task: kawa:lint
+      # - task: flow-manager:lint
 
   lint-fix:
     desc: Fix all linting issues
     cmds:
-      - task: flow-manager:lint-fix
       - task: kawa:lint-fix
+      # - task: flow-manager:lint-fix

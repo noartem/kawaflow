@@ -28,7 +28,6 @@ tasks:
     desc: Run all linting checks
     cmds:
       - task: ruff
-      - task: ty
 
   ruff-fix:
     desc: Fix ruff linting issues

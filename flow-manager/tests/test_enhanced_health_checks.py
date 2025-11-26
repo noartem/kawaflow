@@ -19,9 +19,6 @@ from models import (
     ContainerHealth,
     HealthCheckConfigEvent,
 )
-from socket_event_handler import SocketIOEventHandler
-from system_logger import SystemLogger
-from user_activity_logger import UserActivityLogger
 
 
 class TestEnhancedHealthChecks:
@@ -429,9 +426,9 @@ class TestEnhancedHealthChecks:
                 config_set_call = call
                 break
 
-        assert (
-            config_set_call is not None
-        ), f"Expected 'health_check_config_set' event, got calls: {[call[0][0] for call in calls]}"
+        assert config_set_call is not None, (
+            f"Expected 'health_check_config_set' event, got calls: {[call[0][0] for call in calls]}"
+        )
         assert config_set_call[0][1]["container_id"] == "test_container"
 
         # Test get_health_check_config event
@@ -501,9 +498,9 @@ class TestEnhancedHealthChecks:
                 config_set_call = call
                 break
 
-        assert (
-            config_set_call is not None
-        ), f"Expected 'default_health_config_set' event, got calls: {[call[0][0] for call in calls]}"
+        assert config_set_call is not None, (
+            f"Expected 'default_health_config_set' event, got calls: {[call[0][0] for call in calls]}"
+        )
         assert (
             config_set_call[0][1]["config"]["check_type"] == "tcp"
             or config_set_call[0][1]["config"]["check_type"] == HealthCheckType.TCP
