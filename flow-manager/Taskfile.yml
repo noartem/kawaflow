@@ -5,6 +5,9 @@ tasks:
     desc: Build the flow-manager service Docker image
     cmd: docker build -t flow-manager .
 
+  sh:
+    cmd: docker run --rm -it -v .:/app flow-manager /bin/bash
+
   sh-exec:
     desc: Execute a command in the flow-manager container
     cmd: docker run --rm -v .:/app flow-manager /bin/bash -c "{{.CLI_ARGS}}"

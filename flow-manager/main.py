@@ -1,10 +1,3 @@
-"""
-Flow Manager Main Application
-
-Integrates all components for comprehensive container lifecycle management
-with Socket.IO-based real-time communication and Unix socket integration.
-"""
-
 import asyncio
 import os
 import signal
@@ -21,34 +14,15 @@ from user_activity_logger import UserActivityLogger
 
 
 class FlowManagerApp:
-    """
-    Main application class that integrates all components.
-
-    Provides dependency injection, initialization, and graceful shutdown
-    for the complete container lifecycle management system.
-    """
-
     def __init__(self, socket_dir: str = "/tmp/kawaflow/sockets"):
-        """
-        Initialize the Flow Manager application.
-
-        Args:
-            socket_dir: Directory for Unix socket files
-        """
         self.socket_dir = socket_dir
-
-        # Initialize logging
         self.system_logger = SystemLogger("flow_manager")
-
-        # Initialize Socket.IO server
         self.sio = socketio.AsyncServer(
             async_mode="asgi",
-            cors_allowed_origins="*",  # Configure as needed for production
-            logger=False,  # Use our custom logging
+            cors_allowed_origins="*",
+            logger=False,
             engineio_logger=False,
         )
-
-        # Initialize user activity logger
         self.user_logger = UserActivityLogger(self.sio)
 
         # Initialize core components

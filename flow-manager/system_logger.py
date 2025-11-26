@@ -32,7 +32,7 @@ class SystemLogger:
     full context and stack traces, and debug logging for troubleshooting.
     """
 
-    def __init__(self, logger_name: str = "flow_manager_system"):
+    def __init__(self, logger_name: str):
         """
         Initialize the SystemLogger with structured logging configuration.
 

@@ -1,20 +1,15 @@
-"""
-Tests for UserActivityLogger
-
-Tests the user activity logging functionality including Socket.IO integration,
-sensitive data filtering, and various activity logging methods.
-"""
+from datetime import datetime
 
 import pytest
 import socketio
 from unittest.mock import AsyncMock, MagicMock
-from datetime import datetime
+
 from user_activity_logger import UserActivityLogger
+from sensivity_filter import SensivityFilter
 
 
 @pytest.fixture
 def mock_sio():
-    """Create a mock Socket.IO server."""
     sio = MagicMock(spec=socketio.AsyncServer)
     sio.emit = AsyncMock()
     return sio
@@ -22,16 +17,13 @@ def mock_sio():
 
 @pytest.fixture
 def activity_logger(mock_sio):
-    """Create a UserActivityLogger instance with mocked Socket.IO."""
-    return UserActivityLogger(mock_sio)
+    return UserActivityLogger(mock_sio, SensivityFilter())
 
 
 class TestUserActivityLogger:
-    """Test suite for UserActivityLogger class."""
 
     @pytest.mark.asyncio
     async def test_log_container_created(self, activity_logger, mock_sio):
-        """Test logging container creation activity."""
         container_id = "test_container_123"
         name = "test-container"
         image = "nginx:latest"
@@ -58,7 +50,6 @@ class TestUserActivityLogger:
 
     @pytest.mark.asyncio
     async def test_log_container_started(self, activity_logger, mock_sio):
-        """Test logging container start activity."""
         container_id = "test_container_123"
         name = "test-container"
 
@@ -75,7 +66,6 @@ class TestUserActivityLogger:
 
     @pytest.mark.asyncio
     async def test_log_container_stopped(self, activity_logger, mock_sio):
-        """Test logging container stop activity."""
         container_id = "test_container_123"
         name = "test-container"
 
@@ -91,7 +81,6 @@ class TestUserActivityLogger:
 
     @pytest.mark.asyncio
     async def test_log_container_restarted(self, activity_logger, mock_sio):
-        """Test logging container restart activity."""
         container_id = "test_container_123"
         name = "test-container"
 
@@ -107,7 +96,6 @@ class TestUserActivityLogger:
 
     @pytest.mark.asyncio
     async def test_log_container_updated(self, activity_logger, mock_sio):
-        """Test logging container update activity."""
         container_id = "test_container_123"
         name = "test-container"
 
@@ -123,7 +111,6 @@ class TestUserActivityLogger:
 
     @pytest.mark.asyncio
     async def test_log_container_deleted(self, activity_logger, mock_sio):
-        """Test logging container deletion activity."""
         container_id = "test_container_123"
         name = "test-container"
 
@@ -139,7 +126,6 @@ class TestUserActivityLogger:
 
     @pytest.mark.asyncio
     async def test_log_container_message_received(self, activity_logger, mock_sio):
-        """Test logging received container messages."""
         container_id = "test_container_123"
         message_data = {"type": "status", "data": {"health": "ok"}}
 
@@ -158,7 +144,6 @@ class TestUserActivityLogger:
 
     @pytest.mark.asyncio
     async def test_log_container_message_sent(self, activity_logger, mock_sio):
-        """Test logging sent container messages."""
         container_id = "test_container_123"
         message_data = {"command": "restart", "params": {}}
 
@@ -174,7 +159,6 @@ class TestUserActivityLogger:
 
     @pytest.mark.asyncio
     async def test_log_actor_event(self, activity_logger, mock_sio):
-        """Test logging actor events."""
         container_id = "test_container_123"
         actor = "EmailActor"
         event = "email_sent"
@@ -197,7 +181,6 @@ class TestUserActivityLogger:
 
     @pytest.mark.asyncio
     async def test_log_container_error(self, activity_logger, mock_sio):
-        """Test logging container errors."""
         container_id = "test_container_123"
         error_message = "Connection timeout"
         operation = "start_container"
@@ -220,7 +203,6 @@ class TestUserActivityLogger:
 
     @pytest.mark.asyncio
     async def test_log_user_activity(self, activity_logger, mock_sio):
-        """Test logging general user activity."""
         activity_type = "custom_activity"
         container_id = "test_container_123"
         message = "Custom activity performed"
@@ -238,116 +220,10 @@ class TestUserActivityLogger:
         assert activity_data["message"] == message
         assert activity_data["details"]["custom_field"] == "custom_value"
 
-
-class TestSensitiveDataFiltering:
-    """Test suite for sensitive data filtering functionality."""
-
-    def test_filter_sensitive_keys(self, activity_logger):
-        """Test filtering of sensitive keys in dictionaries."""
-        data = {
-            "username": "testuser",
-            "password": "secret123",
-            "api_key": "abc123",
-            "normal_field": "normal_value",
-        }
-
-        filtered = activity_logger._filter_sensitive_data(data)
-
-        assert filtered["username"] == "testuser"
-        assert filtered["password"] == "[FILTERED]"
-        assert filtered["api_key"] == "[FILTERED]"
-        assert filtered["normal_field"] == "normal_value"
-
-    def test_filter_nested_sensitive_data(self, activity_logger):
-        """Test filtering of nested sensitive data structures."""
-        data = {
-            "config": {
-                "database": {"host": "localhost", "password": "dbpass123"},
-                "auth": {"secret": "jwt_secret", "public_key": "public_data"},
-            },
-            "users": [
-                {"name": "user1", "token": "token123"},
-                {"name": "user2", "role": "admin"},
-            ],
-        }
-
-        filtered = activity_logger._filter_sensitive_data(data)
-
-        assert filtered["config"]["database"]["host"] == "localhost"
-        assert filtered["config"]["database"]["password"] == "[FILTERED]"
-        assert filtered["config"]["auth"]["secret"] == "[FILTERED]"
-        assert filtered["config"]["auth"]["public_key"] == "public_data"
-        assert filtered["users"][0]["name"] == "user1"
-        assert filtered["users"][0]["token"] == "[FILTERED]"
-        assert filtered["users"][1]["name"] == "user2"
-        assert filtered["users"][1]["role"] == "admin"
-
-    def test_filter_sensitive_strings(self, activity_logger):
-        """Test filtering of sensitive patterns in strings."""
-        sensitive_string = "Authorization: Bearer token123"
-        normal_string = "This is a normal message"
-
-        filtered_sensitive = activity_logger._filter_sensitive_data(sensitive_string)
-        filtered_normal = activity_logger._filter_sensitive_data(normal_string)
-
-        assert filtered_sensitive == "[FILTERED]"
-        assert filtered_normal == "This is a normal message"
-
-    def test_is_sensitive_key(self, activity_logger):
-        """Test identification of sensitive keys."""
-        sensitive_keys = [
-            "password",
-            "PASSWORD",
-            "api_key",
-            "API_KEY",
-            "secret",
-            "token",
-            "auth",
-        ]
-        normal_keys = ["username", "email", "name", "status", "data"]
-
-        for key in sensitive_keys:
-            assert activity_logger._is_sensitive_key(key) is True
-
-        for key in normal_keys:
-            assert activity_logger._is_sensitive_key(key) is False
-
-    def test_contains_sensitive_pattern(self, activity_logger):
-        """Test detection of sensitive patterns in text."""
-        sensitive_texts = [
-            "password=secret123",
-            "Bearer token123",
-            "api_key:abc123",
-            "Authorization: Basic dXNlcjpwYXNz",
-        ]
-        normal_texts = [
-            "This is a normal message",
-            "Container started successfully",
-            "Status: running",
-        ]
-
-        for text in sensitive_texts:
-            assert activity_logger._contains_sensitive_pattern(text) is True
-
-        for text in normal_texts:
-            assert activity_logger._contains_sensitive_pattern(text) is False
-
-    def test_contains_sensitive_data(self, activity_logger):
-        """Test detection of sensitive data in complex structures."""
-        sensitive_data = {
-            "config": {"password": "secret"},
-            "message": "Bearer token123",
-        }
-        normal_data = {"status": "running", "message": "Container started"}
-
-        assert activity_logger._contains_sensitive_data(sensitive_data) is True
-        assert activity_logger._contains_sensitive_data(normal_data) is False
-
     @pytest.mark.asyncio
     async def test_message_filtering_with_sensitive_data(
         self, activity_logger, mock_sio
     ):
-        """Test that messages with sensitive data are properly filtered."""
         container_id = "test_container_123"
         sensitive_message = {
             "type": "auth",
@@ -366,11 +242,8 @@ class TestSensitiveDataFiltering:
 
 
 class TestActivityLogStructure:
-    """Test suite for activity log structure and format."""
-
     @pytest.mark.asyncio
     async def test_activity_log_structure(self, activity_logger, mock_sio):
-        """Test that all activity logs have consistent structure."""
         await activity_logger.log_container_created("test_id", "test_name")
 
         mock_sio.emit.assert_called_once()
@@ -392,7 +265,6 @@ class TestActivityLogStructure:
 
     @pytest.mark.asyncio
     async def test_emit_to_all_clients(self, activity_logger, mock_sio):
-        """Test that activity logs are emitted to all clients (no 'to' parameter)."""
         await activity_logger.log_container_started("test_id", "test_name")
 
         mock_sio.emit.assert_called_once()
