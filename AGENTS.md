@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Services: `flow/` (actor-based workflow engine on Kawa), `flow-manager/` (FastAPI + Socket.IO container control plane), `kawa/` (shared Python package), and `docs/` (MkDocs site). `.kiro/steering` holds product/tech guidance; keep it in sync.
+- Services: `flow/` (actor-based workflow engine on Kawa), `flow-manager/` (FastAPI + Socket.IO container control plane), `kawa/` (shared Python package), and `docs/` (MkDocs site).
 - Root `Taskfile.yml` includes service taskfiles; always invoke tasks with prefixes (`task flow:test`, `task flow-manager:build`) instead of `cd`.
 - Tests live in `flow-manager/tests` and `kawa/tests`; Dockerfiles per service; root `.env` for local secrets (never commit).
 
