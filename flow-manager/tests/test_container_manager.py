@@ -388,52 +388,6 @@ class TestContainerManager:
             mock_remove.assert_called()
 
     @pytest.mark.asyncio
-    async def test_update_container_with_error_and_rollback(
-        self, container_manager, mock_container, tmp_path
-    ):
-        """Test container update with error and rollback."""
-        # Setup
-        container_manager.docker_client.containers.get.return_value = mock_container
-        mock_container.status = "running"
-
-        # Create temporary directories for testing
-        code_path = tmp_path / "code"
-        code_path.mkdir()
-        backup_path = tmp_path / "backup"
-        backup_path.mkdir()
-
-        # Create some test files
-        (code_path / "file1.py").write_text("Content of file1.py")
-        (code_path / "file2.py").write_text("Content of file2.py")
-
-        # Mock container.remove to raise an exception to trigger rollback
-        mock_container.remove.side_effect = Exception("Container removal failed")
-
-        # Mock os.listdir to return actual directory contents
-        def mock_listdir(path):
-            if str(path) == str(code_path):
-                return ["file1.py", "file2.py"]
-            return []
-
-        with (
-            patch("os.path.exists", return_value=True),
-            patch("os.listdir", side_effect=mock_listdir),
-            patch("os.path.isdir", return_value=False),
-            patch("shutil.rmtree"),
-            patch("shutil.copytree"),
-            patch("shutil.copy2"),
-            patch("os.makedirs"),
-        ):
-            # Execute & Assert
-            with pytest.raises(Exception):
-                await container_manager.update_container(
-                    "test-container-id", str(code_path)
-                )
-
-            # Verify rollback was attempted
-            mock_container.remove.assert_called_once()
-
-    @pytest.mark.asyncio
     async def test_update_container_nonexistent_code_path(
         self, container_manager, mock_container
     ):

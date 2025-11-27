@@ -10,7 +10,7 @@ import asyncio
 import json
 import socket
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict
 
 from system_logger import SystemLogger
 
@@ -34,35 +34,21 @@ class SocketConnectionError(SocketCommunicationError):
 
 
 class SocketCommunicationHandler:
-    """
-    Handles Unix socket communication with flow containers.
-
-    This class manages socket connections, message sending/receiving,
-    and connection lifecycle for container communication.
-    """
-
     def __init__(
         self,
+        logger: SystemLogger,
         socket_dir: str = "/tmp/kawaflow/sockets",
-        logger: Optional[SystemLogger] = None,
     ):
-        """
-        Initialize the socket communication handler.
-
-        Args:
-            socket_dir: Directory where socket files are stored
-            logger: System logger instance for logging operations
-        """
         self.socket_dir = Path(socket_dir)
         self.socket_dir.mkdir(parents=True, exist_ok=True)
-        self.logger = logger or SystemLogger()
+        self.logger = logger
 
         # Track active socket connections
         self._connections: Dict[str, socket.socket] = {}
         self._connection_status: Dict[str, bool] = {}
 
-        self.logger.log_debug(
-            "SocketCommunicationHandler initialized",
+        self.logger.debug(
+            "initialized",
             {"socket_dir": str(self.socket_dir)},
         )
 
@@ -86,7 +72,7 @@ class SocketCommunicationHandler:
             # Remove existing socket file if it exists
             if socket_path.exists():
                 socket_path.unlink()
-                self.logger.log_debug(
+                self.logger.debug(
                     "Removed existing socket file",
                     {"container_id": container_id, "socket_path": str(socket_path)},
                 )
@@ -103,13 +89,13 @@ class SocketCommunicationHandler:
             self._connections[container_id] = sock
             self._connection_status[container_id] = True
 
-            self.logger.log_debug(
+            self.logger.debug(
                 "Socket setup completed",
                 {"container_id": container_id, "socket_path": str(socket_path)},
             )
 
         except Exception as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "setup_socket", "container_id": container_id}
             )
             raise SocketConnectionError(
@@ -134,7 +120,7 @@ class SocketCommunicationHandler:
             socket_path = self._get_socket_path(container_id)
             if socket_path.exists():
                 socket_path.unlink()
-                self.logger.log_debug(
+                self.logger.debug(
                     "Removed socket file",
                     {"container_id": container_id, "socket_path": str(socket_path)},
                 )
@@ -142,12 +128,12 @@ class SocketCommunicationHandler:
             # Update connection status
             self._connection_status[container_id] = False
 
-            self.logger.log_debug(
+            self.logger.debug(
                 "Socket cleanup completed", {"container_id": container_id}
             )
 
         except Exception as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "cleanup_socket", "container_id": container_id}
             )
             # Don't raise exception for cleanup operations
@@ -213,10 +199,10 @@ class SocketCommunicationHandler:
                 None, client_sock.send, message_data
             )
 
-            self.logger.log_communication(container_id, "sent", message)
+            self.logger.communication(container_id, "sent", message)
 
         except Exception as e:
-            self.logger.log_error(
+            self.logger.error(
                 e,
                 {
                     "operation": "send_message",
@@ -315,7 +301,7 @@ class SocketCommunicationHandler:
                     f"Invalid JSON message from container {container_id}: {str(e)}"
                 )
 
-            self.logger.log_communication(container_id, "received", message)
+            self.logger.communication(container_id, "received", message)
 
             return message
 
@@ -323,7 +309,7 @@ class SocketCommunicationHandler:
             # Re-raise our custom exceptions
             raise
         except Exception as e:
-            self.logger.log_error(
+            self.logger.error(
                 e,
                 {
                     "operation": "receive_message",
@@ -340,4 +326,4 @@ class SocketCommunicationHandler:
         for container_id in list(self._connections.keys()):
             await self.cleanup_socket(container_id)
 
-        self.logger.log_debug("All socket connections closed", {})
+        self.logger.debug("All socket connections closed", {})

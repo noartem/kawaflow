@@ -9,7 +9,6 @@ def sensitive_filter():
 
 
 class TestSensitiveDataFiltering:
-
     def test_filter_sensitive_keys(self, sensitive_filter):
         data = {
             "username": "testuser",

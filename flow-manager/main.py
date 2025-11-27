@@ -3,12 +3,13 @@ import os
 import signal
 from contextlib import asynccontextmanager
 
-import socketio
 from fastapi import FastAPI
 
 from container_manager import ContainerManager
+from messaging import create_messaging
+from event_handler import EventHandler
+from sensivity_filter import SensivityFilter
 from socket_communication_handler import SocketCommunicationHandler
-from socket_event_handler import SocketIOEventHandler
 from system_logger import SystemLogger
 from user_activity_logger import UserActivityLogger
 
@@ -16,124 +17,84 @@ from user_activity_logger import UserActivityLogger
 class FlowManagerApp:
     def __init__(self, socket_dir: str = "/tmp/kawaflow/sockets"):
         self.socket_dir = socket_dir
-        self.system_logger = SystemLogger("flow_manager")
-        self.sio = socketio.AsyncServer(
-            async_mode="asgi",
-            cors_allowed_origins="*",
-            logger=False,
-            engineio_logger=False,
+        self.logger = SystemLogger("flow_manager")
+        self.messaging_kind = os.getenv("MESSAGING_BACKEND", "rabbitmq")
+        self.messaging = create_messaging(
+            kind=self.messaging_kind,
+            logger=SystemLogger(f"messaging_{self.messaging_kind}"),
         )
-        self.user_logger = UserActivityLogger(self.sio)
-
-        # Initialize core components
-        self.container_manager = ContainerManager(socket_dir=socket_dir)
+        self.container_manager = ContainerManager(
+            logger=SystemLogger("container_manager"), socket_dir=socket_dir
+        )
         self.socket_handler = SocketCommunicationHandler(
-            socket_dir=socket_dir, logger=self.system_logger
+            socket_dir=socket_dir, logger=SystemLogger("socket_communication_handler")
         )
-
-        # Initialize Socket.IO event handler
-        self.event_handler = SocketIOEventHandler(
-            sio=self.sio,
+        self.sensivity_filter = SensivityFilter()
+        self.user_logger = UserActivityLogger(
+            self.messaging, sensivity_filter=self.sensivity_filter
+        )
+        self.event_handler = EventHandler(
+            messaging=self.messaging,
             container_manager=self.container_manager,
             socket_handler=self.socket_handler,
-            system_logger=self.system_logger,
+            logger=SystemLogger("event_handler"),
             user_logger=self.user_logger,
         )
 
-        # Application state
         self._shutdown_event = asyncio.Event()
         self._background_tasks = []
 
-        self.system_logger.log_debug(
-            "FlowManagerApp initialized", {"socket_dir": socket_dir}
+        self.logger.debug(
+            "FlowManagerApp initialized",
+            {"socket_dir": socket_dir, "messaging": self.messaging_kind},
         )
 
     async def startup(self) -> None:
-        """
-        Initialize application components and start background tasks.
-        """
-        try:
-            self.system_logger.log_debug("Starting Flow Manager application", {})
+        """Initialize application components and start background tasks."""
+        self.logger.debug("Starting Flow Manager application", {})
+        os.makedirs(self.socket_dir, exist_ok=True)
 
-            # Ensure socket directory exists
-            os.makedirs(self.socket_dir, exist_ok=True)
+        await self.messaging.connect()
+        await self.container_manager.start_monitoring()
+        await self.event_handler.start()
 
-            # Start container monitoring
-            await self.container_manager.start_monitoring()
+        self._background_tasks.append(asyncio.create_task(self._health_check_loop()))
 
-            # Start background tasks
-            self._background_tasks.append(
-                asyncio.create_task(self._health_check_loop())
-            )
-
-            self.system_logger.log_debug(
-                "Flow Manager application started successfully",
-                {"background_tasks": len(self._background_tasks)},
-            )
-
-        except Exception as e:
-            self.system_logger.log_error(
-                e, {"operation": "startup", "component": "FlowManagerApp"}
-            )
-            raise
+        self.logger.debug(
+            "Flow Manager application started",
+            {"background_tasks": len(self._background_tasks)},
+        )
 
     async def shutdown(self) -> None:
-        """
-        Gracefully shutdown application components.
-        """
-        try:
-            self.system_logger.log_debug("Shutting down Flow Manager application", {})
+        self.logger.debug("Shutting down Flow Manager application", {})
+        self._shutdown_event.set()
 
-            # Signal shutdown to background tasks
-            self._shutdown_event.set()
+        for task in self._background_tasks:
+            if not task.done():
+                task.cancel()
+        if self._background_tasks:
+            await asyncio.gather(*self._background_tasks, return_exceptions=True)
 
-            # Cancel background tasks
-            for task in self._background_tasks:
-                if not task.done():
-                    task.cancel()
+        await self.container_manager.stop_monitoring()
+        await self.socket_handler.close_all_connections()
+        await self.messaging.close()
 
-            # Wait for tasks to complete
-            if self._background_tasks:
-                await asyncio.gather(*self._background_tasks, return_exceptions=True)
-
-            # Stop container monitoring
-            await self.container_manager.stop_monitoring()
-
-            # Close socket connections
-            await self.socket_handler.close_all_connections()
-
-            self.system_logger.log_debug(
-                "Flow Manager application shutdown complete", {}
-            )
-
-        except Exception as e:
-            self.system_logger.log_error(
-                e, {"operation": "shutdown", "component": "FlowManagerApp"}
-            )
+        self.logger.debug("Flow Manager application shutdown complete", {})
 
     async def _health_check_loop(self) -> None:
-        """
-        Background task for periodic health checks and maintenance.
-        """
         while not self._shutdown_event.is_set():
             try:
-                # Perform health checks every 30 seconds
                 await asyncio.sleep(30)
-
                 if self._shutdown_event.is_set():
                     break
 
-                # Check container health and emit status updates
                 containers = await self.container_manager.list_containers()
-
                 for container in containers:
                     try:
                         status = await self.container_manager.get_container_status(
                             container.id
                         )
-
-                        # Emit status update to all clients
-                        await self.sio.emit(
+                        await self.messaging.publish_event(
                             "container_status_update",
                             {
                                 "container_id": container.id,
@@ -148,34 +109,29 @@ class FlowManagerApp:
                                 },
                             },
                         )
-
-                    except Exception as e:
-                        self.system_logger.log_error(
-                            e,
-                            {"operation": "health_check", "container_id": container.id},
+                    except Exception as exc:
+                        self.logger.error(
+                            exc,
+                            {
+                                "operation": "health_check",
+                                "container_id": container.id,
+                            },
                         )
-
             except asyncio.CancelledError:
                 break
-            except Exception as e:
-                self.system_logger.log_error(e, {"operation": "health_check_loop"})
-                # Continue the loop even if individual checks fail
+            except Exception as exc:
+                self.logger.error(exc, {"operation": "health_check_loop"})
                 await asyncio.sleep(5)
 
 
-# Global application instance
 app_instance = FlowManagerApp()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    FastAPI lifespan context manager for startup and shutdown.
-    """
-    # Startup
+    """FastAPI lifespan context manager for startup and shutdown."""
     await app_instance.startup()
 
-    # Setup signal handlers for graceful shutdown
     def signal_handler(signum, frame):
         asyncio.create_task(app_instance.shutdown())
 
@@ -185,20 +141,17 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
-        # Shutdown
         await app_instance.shutdown()
 
 
-# Create FastAPI application with integrated Socket.IO
 app = FastAPI(
     title="Flow Manager",
-    description="Container lifecycle management with Socket.IO integration",
+    description="Container lifecycle management with RabbitMQ integration",
     version="1.0.0",
     lifespan=lifespan,
 )
 
 
-# Health check endpoint
 @app.get("/health")
 async def health_check():
     """Health check endpoint for monitoring."""
@@ -210,34 +163,18 @@ async def health_check():
             "container_manager": "active",
             "socket_handler": "active",
             "event_handler": "active",
+            "messaging": "rabbitmq",
         },
     }
-
-
-# Mount Socket.IO ASGI app
-socket_app = socketio.ASGIApp(app_instance.sio, other_asgi_app=app)
-
-
-# Export the socket app as the main ASGI application
-app = socket_app
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    # Configure logging
-    import logging
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-    )
-
-    # Run the application
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=False,  # Disable reload in production
+        reload=False,
         log_level="info",
     )

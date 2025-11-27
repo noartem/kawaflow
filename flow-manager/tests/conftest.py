@@ -4,10 +4,10 @@ Pytest configuration and shared fixtures for flow-manager tests.
 
 import tempfile
 import pytest
-import socketio
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import Mock, patch
 
 from container_manager import ContainerManager
+from messaging import InMemoryMessaging
 from socket_communication_handler import SocketCommunicationHandler
 from system_logger import SystemLogger
 from user_activity_logger import UserActivityLogger
@@ -68,24 +68,24 @@ def socket_handler(temp_socket_dir, mock_logger):
 
 
 @pytest.fixture
-def mock_sio():
-    """Create a mock Socket.IO server."""
-    sio = Mock(spec=socketio.AsyncServer)
-    sio.emit = AsyncMock()
-    sio.handlers = {"/": {}}
-    return sio
+def messaging(mock_logger):
+    """In-memory messaging backend for tests."""
+    return InMemoryMessaging(logger=mock_logger)
 
 
 @pytest.fixture
-def activity_logger(mock_sio):
-    """Create a UserActivityLogger instance with mocked Socket.IO."""
-    return UserActivityLogger(mock_sio)
+def activity_logger(messaging):
+    """Create a UserActivityLogger instance with in-memory messaging."""
+    return UserActivityLogger(messaging)
 
 
 @pytest.fixture
 def app_instance():
     """Create a test application instance with mocked Docker."""
-    with patch("docker.from_env") as mock_docker:
+    with (
+        patch("docker.from_env") as mock_docker,
+        patch.dict("os.environ", {"MESSAGING_BACKEND": "inmemory"}),
+    ):
         mock_docker.return_value = Mock()
         # Import here to avoid Docker connection during module import
         from main import FlowManagerApp

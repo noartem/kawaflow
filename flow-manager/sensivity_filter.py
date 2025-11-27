@@ -42,14 +42,17 @@ SENSITIVE_TEXT_PATTERNS = [
 
 
 class SensivityFilter:
-    def __init__(self, exact_sensitive_keys=EXACT_SENSITIVE_KEYS, sensitive_key_patterns=SENSITIVE_KEY_PATTERNS, sensitive_text_patterns=SENSITIVE_TEXT_PATTERNS):
+    def __init__(
+        self,
+        exact_sensitive_keys=EXACT_SENSITIVE_KEYS,
+        sensitive_key_patterns=SENSITIVE_KEY_PATTERNS,
+        sensitive_text_patterns=SENSITIVE_TEXT_PATTERNS,
+    ):
         self.exact_sensitive_keys = exact_sensitive_keys
         self.sensitive_key_patterns = sensitive_key_patterns
         self.sensitive_text_patterns = sensitive_text_patterns
 
-    def __call__(
-        self, data: Any, _seen: Optional[Set[int]] = None
-    ) -> Any:
+    def __call__(self, data: Any, _seen: Optional[Set[int]] = None) -> Any:
         if data is None:
             return None
 
@@ -65,9 +68,7 @@ class SensivityFilter:
                 _seen.add(data_id)
                 filtered = {}
                 for key, value in data.items():
-                    if self.check_key(key) and not isinstance(
-                        value, (dict, list)
-                    ):
+                    if self.check_key(key) and not isinstance(value, (dict, list)):
                         filtered[key] = "[FILTERED]"
                     else:
                         filtered[key] = self.__call__(value, _seen)
@@ -92,11 +93,14 @@ class SensivityFilter:
             return "[RECURSION_ERROR]"
 
     def check_key(self, key: str) -> bool:
-        return key.lower() in self.exact_sensitive_keys or \
-               any(pattern in key.lower() for pattern in self.sensitive_key_patterns)
+        return key.lower() in self.exact_sensitive_keys or any(
+            pattern in key.lower() for pattern in self.sensitive_key_patterns
+        )
 
     def check_text(self, text: str) -> bool:
-        return any(pattern.lower() in text.lower() for pattern in self.sensitive_text_patterns)
+        return any(
+            pattern.lower() in text.lower() for pattern in self.sensitive_text_patterns
+        )
 
     def check_data(self, data: Any) -> bool:
         if isinstance(data, dict):

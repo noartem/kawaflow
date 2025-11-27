@@ -82,7 +82,7 @@ class SystemLogger:
             # Fallback to string representation if JSON serialization fails
             return f"LOG_SERIALIZATION_ERROR: {str(e)} | DATA: {str(log_data)}"
 
-    def log_container_operation(
+    def container_operation(
         self, operation: str, container_id: str, details: Dict[str, Any]
     ) -> None:
         """
@@ -115,28 +115,7 @@ class SystemLogger:
                 },
             )
 
-    def log_socket_event(self, event: str, sid: str, data: Dict[str, Any]) -> None:
-        """
-        Log Socket.IO events and responses with full context.
-
-        Args:
-            event: Socket.IO event name
-            sid: Socket session ID
-            data: Event data payload
-        """
-        try:
-            log_message = self._format_log_data(
-                event_type="socket_event", event=event, session_id=sid, data=data
-            )
-
-            self.logger.info(f"SOCKET_EVENT | {log_message}")
-
-        except Exception as e:
-            self._log_logging_error(
-                "log_socket_event", e, {"event": event, "sid": sid, "data": str(data)}
-            )
-
-    def log_communication(
+    def communication(
         self, container_id: str, direction: str, message: Dict[str, Any]
     ) -> None:
         """
@@ -168,7 +147,7 @@ class SystemLogger:
                 },
             )
 
-    def log_error(self, error: Exception, context: Dict[str, Any]) -> None:
+    def error(self, error: Exception, context: Dict[str, Any]) -> None:
         """
         Log detailed error information including stack traces and context.
 
@@ -196,9 +175,7 @@ class SystemLogger:
                 f"LOGGING_ERROR in log_error: {str(e)} | Original error: {str(error)}"
             )
 
-    def log_state_change(
-        self, container_id: str, old_state: str, new_state: str
-    ) -> None:
+    def state_change(self, container_id: str, old_state: str, new_state: str) -> None:
         """
         Log container state transitions with relevant metadata.
 
@@ -229,7 +206,7 @@ class SystemLogger:
                 },
             )
 
-    def log_debug(self, message: str, context: Dict[str, Any]) -> None:
+    def debug(self, message: str, context: Dict[str, Any]) -> None:
         """
         Create debug logging for troubleshooting.
 

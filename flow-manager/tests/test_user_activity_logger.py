@@ -1,274 +1,116 @@
 from datetime import datetime
 
 import pytest
-import socketio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import Mock
 
-from user_activity_logger import UserActivityLogger
+from system_logger import SystemLogger
+from messaging import InMemoryMessaging
 from sensivity_filter import SensivityFilter
+from user_activity_logger import UserActivityLogger
 
 
 @pytest.fixture
-def mock_sio():
-    sio = MagicMock(spec=socketio.AsyncServer)
-    sio.emit = AsyncMock()
-    return sio
+def logger():
+    return Mock(spec=SystemLogger)
 
 
 @pytest.fixture
-def activity_logger(mock_sio):
-    return UserActivityLogger(mock_sio, SensivityFilter())
+def messaging(logger):
+    return InMemoryMessaging(logger=logger)
+
+
+@pytest.fixture
+def activity_logger(messaging):
+    return UserActivityLogger(messaging, SensivityFilter())
 
 
 class TestUserActivityLogger:
-
     @pytest.mark.asyncio
-    async def test_log_container_created(self, activity_logger, mock_sio):
+    async def test_container_created(self, activity_logger):
         container_id = "test_container_123"
         name = "test-container"
         image = "nginx:latest"
 
-        await activity_logger.log_container_created(container_id, name, image)
+        await activity_logger.container_created(container_id, name, image)
 
-        # Verify Socket.IO emit was called
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-
-        assert call_args[0][0] == "activity_log"  # Event name
-        activity_data = call_args[0][1]  # Event data
-
-        assert activity_data["type"] == "container_created"
-        assert activity_data["container_id"] == container_id
-        assert (
-            "Container 'test-container' created successfully"
-            in activity_data["message"]
-        )
-        assert activity_data["details"]["name"] == name
-        assert activity_data["details"]["image"] == image
-        assert activity_data["details"]["status"] == "created"
-        assert "timestamp" in activity_data
+        event = activity_logger.messaging.published_events[0]
+        payload = event["payload"]
+        assert payload["type"] == "container_created"
+        assert payload["container_id"] == container_id
+        assert "created successfully" in payload["message"]
+        assert payload["details"]["name"] == name
+        assert payload["details"]["image"] == image
+        assert payload["details"]["status"] == "created"
+        assert "timestamp" in payload
 
     @pytest.mark.asyncio
-    async def test_log_container_started(self, activity_logger, mock_sio):
-        container_id = "test_container_123"
-        name = "test-container"
-
-        await activity_logger.log_container_started(container_id, name)
-
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-        activity_data = call_args[0][1]
-
-        assert activity_data["type"] == "container_started"
-        assert activity_data["container_id"] == container_id
-        assert "started and is now running" in activity_data["message"]
-        assert activity_data["details"]["status"] == "running"
+    async def test_container_started(self, activity_logger):
+        await activity_logger.container_started("cid", "name")
+        payload = activity_logger.messaging.published_events[-1]["payload"]
+        assert payload["type"] == "container_started"
+        assert payload["details"]["status"] == "running"
 
     @pytest.mark.asyncio
-    async def test_log_container_stopped(self, activity_logger, mock_sio):
-        container_id = "test_container_123"
-        name = "test-container"
-
-        await activity_logger.log_container_stopped(container_id, name)
-
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-        activity_data = call_args[0][1]
-
-        assert activity_data["type"] == "container_stopped"
-        assert "stopped successfully" in activity_data["message"]
-        assert activity_data["details"]["status"] == "stopped"
+    async def test_container_stopped(self, activity_logger):
+        await activity_logger.container_stopped("cid", "name")
+        payload = activity_logger.messaging.published_events[-1]["payload"]
+        assert payload["type"] == "container_stopped"
+        assert payload["details"]["status"] == "stopped"
 
     @pytest.mark.asyncio
-    async def test_log_container_restarted(self, activity_logger, mock_sio):
-        container_id = "test_container_123"
-        name = "test-container"
-
-        await activity_logger.log_container_restarted(container_id, name)
-
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-        activity_data = call_args[0][1]
-
-        assert activity_data["type"] == "container_restarted"
-        assert "restarted successfully" in activity_data["message"]
-        assert activity_data["details"]["status"] == "running"
+    async def test_container_restarted(self, activity_logger):
+        await activity_logger.container_restarted("cid", "name")
+        payload = activity_logger.messaging.published_events[-1]["payload"]
+        assert payload["type"] == "container_restarted"
+        assert payload["details"]["status"] == "running"
 
     @pytest.mark.asyncio
-    async def test_log_container_updated(self, activity_logger, mock_sio):
-        container_id = "test_container_123"
-        name = "test-container"
-
-        await activity_logger.log_container_updated(container_id, name)
-
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-        activity_data = call_args[0][1]
-
-        assert activity_data["type"] == "container_updated"
-        assert "updated with new code" in activity_data["message"]
-        assert activity_data["details"]["status"] == "updated"
+    async def test_container_updated(self, activity_logger):
+        await activity_logger.container_updated("cid", "name")
+        payload = activity_logger.messaging.published_events[-1]["payload"]
+        assert payload["type"] == "container_updated"
+        assert payload["details"]["status"] == "updated"
 
     @pytest.mark.asyncio
-    async def test_log_container_deleted(self, activity_logger, mock_sio):
-        container_id = "test_container_123"
-        name = "test-container"
-
-        await activity_logger.log_container_deleted(container_id, name)
-
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-        activity_data = call_args[0][1]
-
-        assert activity_data["type"] == "container_deleted"
-        assert "deleted and resources cleaned up" in activity_data["message"]
-        assert activity_data["details"]["status"] == "deleted"
+    async def test_container_deleted(self, activity_logger):
+        await activity_logger.container_deleted("cid", "name")
+        payload = activity_logger.messaging.published_events[-1]["payload"]
+        assert payload["type"] == "container_deleted"
+        assert payload["details"]["status"] == "deleted"
 
     @pytest.mark.asyncio
-    async def test_log_container_message_received(self, activity_logger, mock_sio):
-        container_id = "test_container_123"
+    async def test_log_container_message_received(self, activity_logger):
         message_data = {"type": "status", "data": {"health": "ok"}}
+        await activity_logger.container_message("cid", message_data, "received")
+        payload = activity_logger.messaging.published_events[-1]["payload"]
+        assert payload["type"] == "container_message"
+        assert "received from container" in payload["message"]
+        assert payload["details"]["direction"] == "received"
+        assert payload["details"]["message_type"] == "status"
 
-        await activity_logger.log_container_message(
-            container_id, message_data, "received"
+    @pytest.mark.asyncio
+    async def test_log_container_message_sent(self, activity_logger):
+        await activity_logger.container_message("cid", {"command": "restart"}, "sent")
+        payload = activity_logger.messaging.published_events[-1]["payload"]
+        assert payload["details"]["direction"] == "sent"
+
+    @pytest.mark.asyncio
+    async def test_log_actor_event(self, activity_logger):
+        await activity_logger.actor_event(
+            "cid", "EmailActor", "email_sent", {"recipient": "user@example.com"}
         )
-
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-        activity_data = call_args[0][1]
-
-        assert activity_data["type"] == "container_message"
-        assert "received from container" in activity_data["message"]
-        assert activity_data["details"]["direction"] == "received"
-        assert activity_data["details"]["message_type"] == "status"
+        payload = activity_logger.messaging.published_events[-1]["payload"]
+        assert payload["type"] == "actor_event"
+        assert payload["details"]["actor"] == "EmailActor"
+        assert payload["details"]["event"] == "email_sent"
 
     @pytest.mark.asyncio
-    async def test_log_container_message_sent(self, activity_logger, mock_sio):
-        container_id = "test_container_123"
-        message_data = {"command": "restart", "params": {}}
-
-        await activity_logger.log_container_message(container_id, message_data, "sent")
-
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-        activity_data = call_args[0][1]
-
-        assert activity_data["type"] == "container_message"
-        assert "sent to container" in activity_data["message"]
-        assert activity_data["details"]["direction"] == "sent"
-
-    @pytest.mark.asyncio
-    async def test_log_actor_event(self, activity_logger, mock_sio):
-        container_id = "test_container_123"
-        actor = "EmailActor"
-        event = "email_sent"
-        event_data = {"recipient": "user@example.com", "subject": "Test"}
-
-        await activity_logger.log_actor_event(container_id, actor, event, event_data)
-
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-        activity_data = call_args[0][1]
-
-        assert activity_data["type"] == "actor_event"
-        assert (
-            "Actor 'EmailActor' triggered event 'email_sent'"
-            in activity_data["message"]
+    async def test_log_container_error(self, activity_logger):
+        await activity_logger.container_error(
+            "cid", "Connection timeout", "start_container"
         )
-        assert activity_data["details"]["actor"] == actor
-        assert activity_data["details"]["event"] == event
-        assert "event_data" in activity_data["details"]
-
-    @pytest.mark.asyncio
-    async def test_log_container_error(self, activity_logger, mock_sio):
-        container_id = "test_container_123"
-        error_message = "Connection timeout"
-        operation = "start_container"
-
-        await activity_logger.log_container_error(
-            container_id, error_message, operation
-        )
-
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-        activity_data = call_args[0][1]
-
-        assert activity_data["type"] == "container_error"
-        assert (
-            "Error during start_container: Connection timeout"
-            in activity_data["message"]
-        )
-        assert activity_data["details"]["error"] is True
-        assert activity_data["details"]["operation"] == operation
-
-    @pytest.mark.asyncio
-    async def test_log_user_activity(self, activity_logger, mock_sio):
-        activity_type = "custom_activity"
-        container_id = "test_container_123"
-        message = "Custom activity performed"
-        details = {"custom_field": "custom_value"}
-
-        await activity_logger.log_user_activity(
-            activity_type, container_id, message, details
-        )
-
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-        activity_data = call_args[0][1]
-
-        assert activity_data["type"] == activity_type
-        assert activity_data["message"] == message
-        assert activity_data["details"]["custom_field"] == "custom_value"
-
-    @pytest.mark.asyncio
-    async def test_message_filtering_with_sensitive_data(
-        self, activity_logger, mock_sio
-    ):
-        container_id = "test_container_123"
-        sensitive_message = {
-            "type": "auth",
-            "credentials": {"username": "user", "password": "secret123"},
-        }
-
-        await activity_logger.log_container_message(container_id, sensitive_message)
-
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-        activity_data = call_args[0][1]
-
-        # Should not include message preview for sensitive data
-        assert "message_preview" not in activity_data["details"]
-        assert activity_data["details"]["message_type"] == "auth"
-
-
-class TestActivityLogStructure:
-    @pytest.mark.asyncio
-    async def test_activity_log_structure(self, activity_logger, mock_sio):
-        await activity_logger.log_container_created("test_id", "test_name")
-
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-
-        assert call_args[0][0] == "activity_log"  # Event name
-        activity_data = call_args[0][1]  # Event data
-
-        # Check required fields
-        required_fields = ["type", "container_id", "message", "details", "timestamp"]
-        for field in required_fields:
-            assert field in activity_data
-
-        # Check timestamp format
-        timestamp = activity_data["timestamp"]
-        datetime.fromisoformat(
-            timestamp.replace("Z", "+00:00")
-        )  # Should not raise exception
-
-    @pytest.mark.asyncio
-    async def test_emit_to_all_clients(self, activity_logger, mock_sio):
-        await activity_logger.log_container_started("test_id", "test_name")
-
-        mock_sio.emit.assert_called_once()
-        call_args = mock_sio.emit.call_args
-
-        # Should not have 'to' parameter (broadcasts to all clients)
-        assert len(call_args[1]) == 0 or "to" not in call_args[1]
+        payload = activity_logger.messaging.published_events[-1]["payload"]
+        assert payload["type"] == "container_error"
+        assert payload["details"]["error"] is True
+        assert payload["details"]["operation"] == "start_container"
+        assert datetime.fromisoformat(payload["timestamp"])

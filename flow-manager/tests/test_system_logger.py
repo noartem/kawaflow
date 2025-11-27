@@ -19,8 +19,8 @@ class TestSystemLogger:
         self.logger = SystemLogger("test_logger")
 
         # Capture log output for testing
-        self.log_capture = StringIO()
-        handler = logging.StreamHandler(self.log_capture)
+        self.capture = StringIO()
+        handler = logging.StreamHandler(self.capture)
         handler.setLevel(logging.DEBUG)
         formatter = logging.Formatter("%(levelname)s | %(message)s")
         handler.setFormatter(formatter)
@@ -31,7 +31,7 @@ class TestSystemLogger:
 
     def get_log_output(self) -> str:
         """Get captured log output"""
-        return self.log_capture.getvalue()
+        return self.capture.getvalue()
 
     def test_logger_initialization(self):
         """Test SystemLogger initialization and setup"""
@@ -49,7 +49,7 @@ class TestSystemLogger:
         details = {"image": "nginx:latest", "ports": {"80": 8080}, "status": "created"}
 
         # Execute
-        self.logger.log_container_operation(operation, container_id, details)
+        self.logger.container_operation(operation, container_id, details)
 
         # Verify
         log_output = self.get_log_output()
@@ -61,24 +61,6 @@ class TestSystemLogger:
         assert container_id in log_output
         assert "container_operation" in log_output
 
-    def test_log_socket_event(self):
-        """Test Socket.IO event logging"""
-        # Test data
-        event = "start_container"
-        sid = "session_123"
-        data = {"container_id": "test_123", "image": "nginx"}
-
-        # Execute
-        self.logger.log_socket_event(event, sid, data)
-
-        # Verify
-        log_output = self.get_log_output()
-        assert "SOCKET_EVENT" in log_output
-        assert "INFO" in log_output
-        assert event in log_output
-        assert sid in log_output
-        assert "socket_event" in log_output
-
     def test_log_communication(self):
         """Test Unix socket communication logging"""
         # Test data
@@ -87,7 +69,7 @@ class TestSystemLogger:
         message = {"command": "status", "data": {}}
 
         # Execute
-        self.logger.log_communication(container_id, direction, message)
+        self.logger.communication(container_id, direction, message)
 
         # Verify
         log_output = self.get_log_output()
@@ -110,7 +92,7 @@ class TestSystemLogger:
             }
 
             # Execute
-            self.logger.log_error(e, context)
+            self.logger.error(e, context)
 
         # Verify
         log_output = self.get_log_output()
@@ -129,7 +111,7 @@ class TestSystemLogger:
         new_state = "running"
 
         # Execute
-        self.logger.log_state_change(container_id, old_state, new_state)
+        self.logger.state_change(container_id, old_state, new_state)
 
         # Verify
         log_output = self.get_log_output()
@@ -151,7 +133,7 @@ class TestSystemLogger:
         }
 
         # Execute
-        self.logger.log_debug(message, context)
+        self.logger.debug(message, context)
 
         # Verify
         log_output = self.get_log_output()
@@ -163,7 +145,7 @@ class TestSystemLogger:
     def test_structured_logging_format(self):
         """Test that logs are properly structured with JSON data"""
         # Execute a log operation
-        self.logger.log_container_operation("test_op", "test_id", {"key": "value"})
+        self.logger.container_operation("test_op", "test_id", {"key": "value"})
 
         # Verify structured format
         log_output = self.get_log_output()
@@ -178,7 +160,7 @@ class TestSystemLogger:
         # Mock JSON dumps to raise an exception
         with patch("json.dumps", side_effect=TypeError("Mock JSON error")):
             # This should not raise an exception
-            self.logger.log_container_operation(
+            self.logger.container_operation(
                 "test_op",
                 "test_id",
                 {"problematic": object()},  # Non-serializable object
@@ -198,7 +180,7 @@ class TestSystemLogger:
             self.logger.logger, "info", side_effect=Exception("Mock logging error")
         ):
             # This should not raise an exception
-            self.logger.log_container_operation("test", "test", {})
+            self.logger.container_operation("test", "test", {})
 
             # Verify error was handled
             log_output = self.get_log_output()
@@ -207,13 +189,13 @@ class TestSystemLogger:
     def test_multiple_log_levels(self):
         """Test that different log levels are used appropriately"""
         # Test different log levels
-        self.logger.log_debug("Debug message", {})
-        self.logger.log_container_operation("info_op", "info_id", {})
+        self.logger.debug("Debug message", {})
+        self.logger.container_operation("info_op", "info_id", {})
 
         try:
             raise RuntimeError("Test error")
         except RuntimeError as e:
-            self.logger.log_error(e, {})
+            self.logger.error(e, {})
 
         log_output = self.get_log_output()
 
@@ -224,7 +206,7 @@ class TestSystemLogger:
 
     def test_timestamp_inclusion(self):
         """Test that timestamps are included in all log entries"""
-        self.logger.log_container_operation("test", "test", {})
+        self.logger.container_operation("test", "test", {})
 
         log_output = self.get_log_output()
         assert "timestamp" in log_output
@@ -243,7 +225,7 @@ class TestSystemLogger:
             "operation_id": "op789",
         }
 
-        self.logger.log_debug("Test with context", context)
+        self.logger.debug("Test with context", context)
 
         log_output = self.get_log_output()
         assert "user123" in log_output

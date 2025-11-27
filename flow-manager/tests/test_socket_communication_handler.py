@@ -59,7 +59,7 @@ class TestSocketCommunicationHandler:
         assert Path(temp_socket_dir).exists()
 
         # Verify debug logging
-        mock_logger.log_debug.assert_called_once()
+        mock_logger.debug.assert_called_once()
 
     def test_init_default_logger(self, temp_socket_dir):
         """Test handler initialization with default logger."""
@@ -101,7 +101,7 @@ class TestSocketCommunicationHandler:
             assert handler._connection_status[container_id] is True
 
             # Verify logging
-            handler.logger.log_debug.assert_called()
+            handler.logger.debug.assert_called()
 
     @pytest.mark.asyncio
     async def test_setup_socket_removes_existing_file(self, handler):
@@ -121,7 +121,7 @@ class TestSocketCommunicationHandler:
 
             # Verify existing file was removed
             # Note: The file might be recreated by socket.bind()
-            handler.logger.log_debug.assert_called()
+            handler.logger.debug.assert_called()
 
     @pytest.mark.asyncio
     async def test_setup_socket_failure(self, handler):
@@ -138,7 +138,7 @@ class TestSocketCommunicationHandler:
             assert container_id not in handler._connections
 
             # Verify error logging
-            handler.logger.log_error.assert_called_once()
+            handler.logger.error.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_cleanup_socket_success(self, handler):
@@ -167,7 +167,7 @@ class TestSocketCommunicationHandler:
         assert not socket_path.exists()
 
         # Verify logging
-        handler.logger.log_debug.assert_called()
+        handler.logger.debug.assert_called()
 
     @pytest.mark.asyncio
     async def test_cleanup_socket_no_connection(self, handler):
@@ -194,7 +194,7 @@ class TestSocketCommunicationHandler:
         await handler.cleanup_socket(container_id)
 
         # Verify error was logged
-        handler.logger.log_error.assert_called_once()
+        handler.logger.error.assert_called_once()
 
     def test_is_socket_connected_true(self, handler):
         """Test socket connection status check - connected."""
@@ -246,7 +246,7 @@ class TestSocketCommunicationHandler:
             # Message serialization verification removed as it was unused
 
             # Verify logging
-            handler.logger.log_communication.assert_called_once_with(
+            handler.logger.communication.assert_called_once_with(
                 container_id, "sent", message
             )
 
@@ -303,7 +303,7 @@ class TestSocketCommunicationHandler:
             assert "Failed to send message" in str(exc_info.value)
 
             # Verify error logging
-            handler.logger.log_error.assert_called_once()
+            handler.logger.error.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_receive_message_success(self, handler):
@@ -340,7 +340,7 @@ class TestSocketCommunicationHandler:
             assert result == message
 
             # Verify logging
-            handler.logger.log_communication.assert_called_once_with(
+            handler.logger.communication.assert_called_once_with(
                 container_id, "received", message
             )
 
@@ -426,7 +426,7 @@ class TestSocketCommunicationHandler:
             assert handler._connection_status[container_id] is False
 
         # Verify logging
-        handler.logger.log_debug.assert_called()
+        handler.logger.debug.assert_called()
 
 
 class TestSocketCommunicationHandlerIntegration:

@@ -30,14 +30,7 @@ from system_logger import SystemLogger
 
 
 class ContainerManager:
-    """
-    Manages Docker container lifecycle operations.
-
-    Provides comprehensive container management including creation with Unix socket
-    mounting, start/stop/restart operations, code updates, and proper cleanup.
-    """
-
-    def __init__(self, socket_dir: str = "/tmp/kawaflow/sockets"):
+    def __init__(self, logger: SystemLogger, socket_dir: str = "/tmp/kawaflow/sockets"):
         """
         Initialize ContainerManager.
 
@@ -46,7 +39,7 @@ class ContainerManager:
         """
         self.docker_client = docker.from_env()
         self.socket_dir = socket_dir
-        self.logger = SystemLogger()
+        self.logger = logger
 
         # Ensure socket directory exists
         os.makedirs(self.socket_dir, exist_ok=True)
@@ -78,7 +71,7 @@ class ContainerManager:
         self._health_check_tasks: Dict[str, asyncio.Task] = {}
         self._default_health_config = None  # Will be imported after models
 
-        self.logger.log_debug(
+        self.logger.debug(
             "ContainerManager initialized", {"socket_dir": self.socket_dir}
         )
 
@@ -97,7 +90,7 @@ class ContainerManager:
             APIError: If container creation fails
         """
         try:
-            self.logger.log_debug(
+            self.logger.debug(
                 "Creating container", {"image": config.image, "name": config.name}
             )
 
@@ -140,7 +133,7 @@ class ContainerManager:
             # Create container info
             container_info = self._build_container_info(container, socket_path)
 
-            self.logger.log_container_operation(
+            self.logger.container_operation(
                 "create",
                 container.id,
                 {
@@ -153,12 +146,12 @@ class ContainerManager:
             return container_info
 
         except ImageNotFound as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "create_container", "image": config.image}
             )
             raise
         except APIError as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "create_container", "config": config.dict()}
             )
             raise
@@ -175,22 +168,22 @@ class ContainerManager:
             APIError: If start operation fails
         """
         try:
-            self.logger.log_debug("Starting container", {"container_id": container_id})
+            self.logger.debug("Starting container", {"container_id": container_id})
 
             container = self.docker_client.containers.get(container_id)
             container.start()
 
-            self.logger.log_container_operation(
+            self.logger.container_operation(
                 "start", container_id, {"status": "started"}
             )
 
         except NotFound as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "start_container", "container_id": container_id}
             )
             raise
         except APIError as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "start_container", "container_id": container_id}
             )
             raise
@@ -207,22 +200,20 @@ class ContainerManager:
             APIError: If stop operation fails
         """
         try:
-            self.logger.log_debug("Stopping container", {"container_id": container_id})
+            self.logger.debug("Stopping container", {"container_id": container_id})
 
             container = self.docker_client.containers.get(container_id)
             container.stop()
 
-            self.logger.log_container_operation(
-                "stop", container_id, {"status": "stopped"}
-            )
+            self.logger.container_operation("stop", container_id, {"status": "stopped"})
 
         except NotFound as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "stop_container", "container_id": container_id}
             )
             raise
         except APIError as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "stop_container", "container_id": container_id}
             )
             raise
@@ -239,24 +230,22 @@ class ContainerManager:
             APIError: If restart operation fails
         """
         try:
-            self.logger.log_debug(
-                "Restarting container", {"container_id": container_id}
-            )
+            self.logger.debug("Restarting container", {"container_id": container_id})
 
             container = self.docker_client.containers.get(container_id)
             container.restart()
 
-            self.logger.log_container_operation(
+            self.logger.container_operation(
                 "restart", container_id, {"status": "restarted"}
             )
 
         except NotFound as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "restart_container", "container_id": container_id}
             )
             raise
         except APIError as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "restart_container", "container_id": container_id}
             )
             raise
@@ -285,7 +274,7 @@ class ContainerManager:
         original_state = None
 
         try:
-            self.logger.log_debug(
+            self.logger.debug(
                 "Starting container update",
                 {"container_id": container_id, "code_path": code_path},
             )
@@ -300,7 +289,7 @@ class ContainerManager:
             original_state = container.status
             was_running = original_state == "running"
 
-            self.logger.log_debug(
+            self.logger.debug(
                 "Container state captured",
                 {"container_id": container_id, "original_state": original_state},
             )
@@ -329,7 +318,7 @@ class ContainerManager:
                 if os.path.exists(host_code_path):
                     backup_path = f"{host_code_path}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
                     shutil.copytree(host_code_path, backup_path)
-                    self.logger.log_debug(
+                    self.logger.debug(
                         "Created code backup",
                         {"backup_path": backup_path, "original_path": host_code_path},
                     )
@@ -357,14 +346,14 @@ class ContainerManager:
                 else:
                     shutil.copy2(src_path, dst_path)
 
-            self.logger.log_debug(
+            self.logger.debug(
                 "Code copied to volume",
                 {"code_volume_dir": code_volume_dir, "source": code_path},
             )
 
             # Stop container if running (preserving socket)
             if was_running:
-                self.logger.log_debug(
+                self.logger.debug(
                     "Stopping container for update", {"container_id": container_id}
                 )
                 container.stop()
@@ -403,7 +392,7 @@ class ContainerManager:
             # Remove old container
             container.remove()
 
-            self.logger.log_debug(
+            self.logger.debug(
                 "Creating updated container",
                 {"name": name, "image": image, "binds": new_binds},
             )
@@ -425,7 +414,7 @@ class ContainerManager:
 
             # Start container if it was originally running
             if was_running:
-                self.logger.log_debug(
+                self.logger.debug(
                     "Starting updated container", {"container_id": new_container.id}
                 )
                 new_container.start()
@@ -433,9 +422,9 @@ class ContainerManager:
             # Clean up backup if update was successful
             if backup_path and os.path.exists(backup_path):
                 shutil.rmtree(backup_path)
-                self.logger.log_debug("Cleaned up backup", {"backup_path": backup_path})
+                self.logger.debug("Cleaned up backup", {"backup_path": backup_path})
 
-            self.logger.log_container_operation(
+            self.logger.container_operation(
                 "update",
                 new_container.id,
                 {
@@ -449,7 +438,7 @@ class ContainerManager:
 
         except Exception as e:
             # Rollback on failure
-            self.logger.log_error(
+            self.logger.error(
                 e,
                 {
                     "operation": "update_container",
@@ -462,7 +451,7 @@ class ContainerManager:
             # Attempt rollback if we have backup
             if backup_path and os.path.exists(backup_path):
                 try:
-                    self.logger.log_debug(
+                    self.logger.debug(
                         "Initiating rollback", {"backup_path": backup_path}
                     )
 
@@ -475,12 +464,12 @@ class ContainerManager:
                                 shutil.rmtree(host_code_path)
                             shutil.copytree(backup_path, host_code_path)
 
-                        self.logger.log_debug(
+                        self.logger.debug(
                             "Rollback completed", {"backup_path": backup_path}
                         )
 
                 except Exception as rollback_error:
-                    self.logger.log_error(
+                    self.logger.error(
                         rollback_error,
                         {
                             "operation": "rollback_container_update",
@@ -507,7 +496,7 @@ class ContainerManager:
             APIError: If deletion fails
         """
         try:
-            self.logger.log_debug("Deleting container", {"container_id": container_id})
+            self.logger.debug("Deleting container", {"container_id": container_id})
 
             container = self.docker_client.containers.get(container_id)
             container_name = container.name
@@ -526,11 +515,11 @@ class ContainerManager:
             socket_path = os.path.join(self.socket_dir, f"{container_name}.sock")
             if os.path.exists(socket_path):
                 os.remove(socket_path)
-                self.logger.log_debug(
+                self.logger.debug(
                     "Cleaned up socket file", {"socket_path": socket_path}
                 )
 
-            self.logger.log_container_operation(
+            self.logger.container_operation(
                 "delete",
                 container_id,
                 {
@@ -541,12 +530,12 @@ class ContainerManager:
             )
 
         except NotFound as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "delete_container", "container_id": container_id}
             )
             raise
         except APIError as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "delete_container", "container_id": container_id}
             )
             raise
@@ -569,7 +558,7 @@ class ContainerManager:
         if container_id in self._health_status_history:
             del self._health_status_history[container_id]
 
-        self.logger.log_debug(
+        self.logger.debug(
             "Health check resources cleaned up", {"container_id": container_id}
         )
 
@@ -585,7 +574,7 @@ class ContainerManager:
         self._health_check_configs.clear()
         self._health_status_history.clear()
 
-        self.logger.log_debug("All health check resources cleaned up")
+        self.logger.debug("All health check resources cleaned up")
 
     async def get_container_status(self, container_id: str) -> ContainerStatus:
         """
@@ -651,7 +640,7 @@ class ContainerManager:
             )
 
         except NotFound as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "get_container_status", "container_id": container_id}
             )
             raise
@@ -672,12 +661,12 @@ class ContainerManager:
                 container_info = self._build_container_info(container, socket_path)
                 container_infos.append(container_info)
 
-            self.logger.log_debug("Listed containers", {"count": len(container_infos)})
+            self.logger.debug("Listed containers", {"count": len(container_infos)})
 
             return container_infos
 
         except APIError as e:
-            self.logger.log_error(e, {"operation": "list_containers"})
+            self.logger.error(e, {"operation": "list_containers"})
             raise
 
     def _build_container_info(self, container, socket_path: str) -> ContainerInfo:
@@ -819,7 +808,7 @@ class ContainerManager:
             }
 
         except Exception as e:
-            self.logger.log_error(
+            self.logger.error(
                 e, {"operation": "get_resource_usage", "container_id": container.id}
             )
             return {}
@@ -834,7 +823,7 @@ class ContainerManager:
         """
         self._status_change_callbacks.append(callback)
         callback_name = getattr(callback, "__name__", str(callback))
-        self.logger.log_debug(
+        self.logger.debug(
             "Registered status change callback", {"callback": callback_name}
         )
 
@@ -848,7 +837,7 @@ class ContainerManager:
         """
         self._health_check_callbacks.append(callback)
         callback_name = getattr(callback, "__name__", str(callback))
-        self.logger.log_debug(
+        self.logger.debug(
             "Registered health check callback", {"callback": callback_name}
         )
 
@@ -862,7 +851,7 @@ class ContainerManager:
         """
         self._crash_callbacks.append(callback)
         callback_name = getattr(callback, "__name__", str(callback))
-        self.logger.log_debug("Registered crash callback", {"callback": callback_name})
+        self.logger.debug("Registered crash callback", {"callback": callback_name})
 
     def register_resource_alert_callback(self, callback: Callable) -> None:
         """
@@ -874,7 +863,7 @@ class ContainerManager:
         """
         self._resource_alert_callbacks.append(callback)
         callback_name = getattr(callback, "__name__", str(callback))
-        self.logger.log_debug(
+        self.logger.debug(
             "Registered resource alert callback", {"callback": callback_name}
         )
 
@@ -891,7 +880,7 @@ class ContainerManager:
         for key, value in thresholds.items():
             if key in self._resource_thresholds:
                 self._resource_thresholds[key] = value
-                self.logger.log_debug(
+                self.logger.debug(
                     "Updated resource threshold", {"resource": key, "threshold": value}
                 )
 
@@ -907,12 +896,12 @@ class ContainerManager:
     def enable_resource_monitoring(self) -> None:
         """Enable resource usage monitoring."""
         self._resource_monitoring_enabled = True
-        self.logger.log_debug("Resource monitoring enabled", {})
+        self.logger.debug("Resource monitoring enabled", {})
 
     def disable_resource_monitoring(self) -> None:
         """Disable resource usage monitoring."""
         self._resource_monitoring_enabled = False
-        self.logger.log_debug("Resource monitoring disabled", {})
+        self.logger.debug("Resource monitoring disabled", {})
 
     async def start_monitoring(self) -> None:
         """
@@ -922,12 +911,12 @@ class ContainerManager:
         health check failures, and crashes.
         """
         if self._monitoring_active:
-            self.logger.log_debug("Container monitoring already active", {})
+            self.logger.debug("Container monitoring already active", {})
             return
 
         self._monitoring_active = True
         self._monitoring_task = asyncio.create_task(self._monitoring_loop())
-        self.logger.log_debug("Started container monitoring", {})
+        self.logger.debug("Started container monitoring", {})
 
     async def stop_monitoring(self) -> None:
         """
@@ -945,13 +934,13 @@ class ContainerManager:
                 pass
             self._monitoring_task = None
 
-        self.logger.log_debug("Stopped container monitoring", {})
+        self.logger.debug("Stopped container monitoring", {})
 
     async def _monitoring_loop(self) -> None:
         """
         Main monitoring loop that checks container status changes.
         """
-        self.logger.log_debug("Starting container monitoring loop", {})
+        self.logger.debug("Starting container monitoring loop", {})
 
         while self._monitoring_active:
             try:
@@ -965,7 +954,7 @@ class ContainerManager:
                 await asyncio.sleep(5)  # Check every 5 seconds
 
             except Exception as e:
-                self.logger.log_error(e, {"operation": "monitoring_loop"})
+                self.logger.error(e, {"operation": "monitoring_loop"})
                 await asyncio.sleep(10)  # Wait longer on error
 
     async def _check_container_status(self, container) -> None:
@@ -989,7 +978,7 @@ class ContainerManager:
             # Check for state changes
             previous_state = self._container_states.get(container_id)
             if previous_state and previous_state != current_state:
-                self.logger.log_state_change(
+                self.logger.state_change(
                     container_id, previous_state.value, current_state.value
                 )
 
@@ -1001,7 +990,7 @@ class ContainerManager:
                         )
                     except Exception as e:
                         callback_name = getattr(callback, "__name__", str(callback))
-                        self.logger.log_error(
+                        self.logger.error(
                             e,
                             {
                                 "operation": "status_change_callback",
@@ -1028,7 +1017,7 @@ class ContainerManager:
                 await self._check_resource_usage(container)
 
         except Exception as e:
-            self.logger.log_error(
+            self.logger.error(
                 e,
                 {
                     "operation": "check_container_status",
@@ -1058,7 +1047,7 @@ class ContainerManager:
                     "pid": state_info.get("Pid", 0),
                 }
 
-                self.logger.log_error(
+                self.logger.error(
                     Exception(f"Container crashed with exit code {exit_code}"),
                     {
                         "operation": "container_crash_detected",
@@ -1075,7 +1064,7 @@ class ContainerManager:
                         )
                     except Exception as e:
                         callback_name = getattr(callback, "__name__", str(callback))
-                        self.logger.log_error(
+                        self.logger.error(
                             e,
                             {
                                 "operation": "crash_callback",
@@ -1085,7 +1074,7 @@ class ContainerManager:
                         )
 
         except Exception as e:
-            self.logger.log_error(
+            self.logger.error(
                 e,
                 {
                     "operation": "check_container_crash",
@@ -1118,7 +1107,7 @@ class ContainerManager:
                     "log": health_info.get("Log", []),
                 }
 
-                self.logger.log_debug(
+                self.logger.debug(
                     "Container health check failed",
                     {"container_id": container_id, "health_details": health_details},
                 )
@@ -1129,7 +1118,7 @@ class ContainerManager:
                         await self._safe_callback(callback, container_id, health)
                     except Exception as e:
                         callback_name = getattr(callback, "__name__", str(callback))
-                        self.logger.log_error(
+                        self.logger.error(
                             e,
                             {
                                 "operation": "health_check_callback",
@@ -1139,7 +1128,7 @@ class ContainerManager:
                         )
 
         except Exception as e:
-            self.logger.log_error(
+            self.logger.error(
                 e,
                 {
                     "operation": "check_container_health",
@@ -1173,7 +1162,7 @@ class ContainerManager:
         else:
             self._stop_health_check_task(container_id)
 
-        self.logger.log_debug(
+        self.logger.debug(
             "Health check configuration set",
             {"container_id": container_id, "config": config.dict()},
         )
@@ -1223,7 +1212,7 @@ class ContainerManager:
             config: Default health check configuration
         """
         self._default_health_config = config
-        self.logger.log_debug(
+        self.logger.debug(
             "Default health check configuration set", {"config": config.dict()}
         )
 
@@ -1241,9 +1230,7 @@ class ContainerManager:
         task = asyncio.create_task(self._health_check_loop(container_id))
         self._health_check_tasks[container_id] = task
 
-        self.logger.log_debug(
-            "Health check task started", {"container_id": container_id}
-        )
+        self.logger.debug("Health check task started", {"container_id": container_id})
 
     def _stop_health_check_task(self, container_id: str) -> None:
         """
@@ -1258,7 +1245,7 @@ class ContainerManager:
                 task.cancel()
             del self._health_check_tasks[container_id]
 
-            self.logger.log_debug(
+            self.logger.debug(
                 "Health check task stopped", {"container_id": container_id}
             )
 
@@ -1282,7 +1269,7 @@ class ContainerManager:
                 try:
                     container = self.docker_client.containers.get(container_id)
                 except NotFound:
-                    self.logger.log_debug(
+                    self.logger.debug(
                         "Container not found, stopping health checks",
                         {"container_id": container_id},
                     )
@@ -1309,7 +1296,7 @@ class ContainerManager:
                             )
                         except Exception as e:
                             callback_name = getattr(callback, "__name__", str(callback))
-                            self.logger.log_error(
+                            self.logger.error(
                                 e,
                                 {
                                     "operation": "enhanced_health_check_callback",
@@ -1324,7 +1311,7 @@ class ContainerManager:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                self.logger.log_error(
+                self.logger.error(
                     e,
                     {
                         "operation": "health_check_loop",
@@ -1641,7 +1628,7 @@ class ContainerManager:
         try:
             history.record_recovery_attempt()
 
-            self.logger.log_debug(
+            self.logger.debug(
                 "Attempting container recovery",
                 {
                     "container_id": container_id,
@@ -1655,8 +1642,8 @@ class ContainerManager:
             elif config.recovery_action == "recreate":
                 # Get container info before deletion
                 container = self.docker_client.containers.get(container_id)
-                container_config = container.attrs.get("Config", {})
-                host_config = container.attrs.get("HostConfig", {})
+                container.attrs.get("Config", {})
+                container.attrs.get("HostConfig", {})
 
                 # Stop and remove container
                 await self.delete_container(container_id)
@@ -1685,7 +1672,7 @@ class ContainerManager:
                     old_history.container_id = new_container.id
                     self._health_status_history[new_container.id] = old_history
 
-            self.logger.log_container_operation(
+            self.logger.container_operation(
                 "recovery",
                 container_id,
                 {
@@ -1696,7 +1683,7 @@ class ContainerManager:
             )
 
         except Exception as e:
-            self.logger.log_error(
+            self.logger.error(
                 e,
                 {
                     "operation": "container_recovery",
@@ -1770,7 +1757,7 @@ class ContainerManager:
             await self._check_resource_thresholds(container_id, resource_usage)
 
         except Exception as e:
-            self.logger.log_error(
+            self.logger.error(
                 e,
                 {
                     "operation": "check_resource_usage",
@@ -1865,7 +1852,7 @@ class ContainerManager:
 
             # Trigger alerts for each threshold exceeded
             for alert in alerts_triggered:
-                self.logger.log_debug(
+                self.logger.debug(
                     "Resource threshold exceeded",
                     {
                         "container_id": container_id,
@@ -1888,7 +1875,7 @@ class ContainerManager:
                         )
                     except Exception as e:
                         callback_name = getattr(callback, "__name__", str(callback))
-                        self.logger.log_error(
+                        self.logger.error(
                             e,
                             {
                                 "operation": "resource_alert_callback",
@@ -1898,7 +1885,7 @@ class ContainerManager:
                         )
 
         except Exception as e:
-            self.logger.log_error(
+            self.logger.error(
                 e,
                 {
                     "operation": "check_resource_thresholds",
@@ -1937,7 +1924,7 @@ class ContainerManager:
                 callback(*args)
         except Exception as e:
             callback_name = getattr(callback, "__name__", str(callback))
-            self.logger.log_error(
+            self.logger.error(
                 e,
                 {
                     "operation": "safe_callback",

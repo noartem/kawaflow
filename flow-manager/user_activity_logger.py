@@ -1,17 +1,17 @@
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
-
-import socketio
+from typing import Any, Dict, Optional
 
 from sensivity_filter import SensivityFilter
 
 
 class UserActivityLogger:
-    def __init__(self, sio: socketio.AsyncServer, sensivity_filter: SensivityFilter):
-        self.sio = sio
-        self.sensivity_filter = sensivity_filter
+    def __init__(
+        self, messaging: Any, sensivity_filter: Optional[SensivityFilter] = None
+    ):
+        self.messaging = messaging
+        self.sensivity_filter = sensivity_filter or SensivityFilter()
 
-    async def log_container_created(
+    async def container_created(
         self, container_id: str, name: str, image: Optional[str] = None
     ) -> None:
         message = f"Container '{name}' created successfully"
@@ -23,42 +23,42 @@ class UserActivityLogger:
             "container_created", container_id, message, details
         )
 
-    async def log_container_started(self, container_id: str, name: str) -> None:
+    async def container_started(self, container_id: str, name: str) -> None:
         message = f"Container '{name}' started and is now running"
         details = {"container_id": container_id, "name": name, "status": "running"}
         await self._emit_activity_log(
             "container_started", container_id, message, details
         )
 
-    async def log_container_stopped(self, container_id: str, name: str) -> None:
+    async def container_stopped(self, container_id: str, name: str) -> None:
         message = f"Container '{name}' stopped successfully"
         details = {"container_id": container_id, "name": name, "status": "stopped"}
         await self._emit_activity_log(
             "container_stopped", container_id, message, details
         )
 
-    async def log_container_restarted(self, container_id: str, name: str) -> None:
+    async def container_restarted(self, container_id: str, name: str) -> None:
         message = f"Container '{name}' restarted successfully"
         details = {"container_id": container_id, "name": name, "status": "running"}
         await self._emit_activity_log(
             "container_restarted", container_id, message, details
         )
 
-    async def log_container_updated(self, container_id: str, name: str) -> None:
+    async def container_updated(self, container_id: str, name: str) -> None:
         message = f"Container '{name}' updated with new code"
         details = {"container_id": container_id, "name": name, "status": "updated"}
         await self._emit_activity_log(
             "container_updated", container_id, message, details
         )
 
-    async def log_container_deleted(self, container_id: str, name: str) -> None:
+    async def container_deleted(self, container_id: str, name: str) -> None:
         message = f"Container '{name}' deleted and resources cleaned up"
         details = {"container_id": container_id, "name": name, "status": "deleted"}
         await self._emit_activity_log(
             "container_deleted", container_id, message, details
         )
 
-    async def log_container_message(
+    async def container_message(
         self,
         container_id: str,
         message_data: Dict[str, Any],
@@ -93,7 +93,7 @@ class UserActivityLogger:
             "container_message", container_id, message, details
         )
 
-    async def log_actor_event(
+    async def actor_event(
         self,
         container_id: str,
         actor: str,
@@ -113,7 +113,7 @@ class UserActivityLogger:
 
         await self._emit_activity_log("actor_event", container_id, message, details)
 
-    async def log_container_error(
+    async def container_error(
         self, container_id: str, error_message: str, operation: Optional[str] = None
     ) -> None:
         if operation:
@@ -130,7 +130,7 @@ class UserActivityLogger:
 
         await self._emit_activity_log("container_error", container_id, message, details)
 
-    async def log_user_activity(
+    async def user_activity(
         self,
         activity_type: str,
         container_id: str,
@@ -148,10 +148,14 @@ class UserActivityLogger:
         message: str,
         details: Dict[str, Any],
     ) -> None:
-        await self.sio.emit("activity_log", {
-            "type": activity_type,
-            "container_id": container_id,
-            "message": message,
-            "details": details,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
+        await self.messaging.publish_event(
+            "activity_log",
+            {
+                "type": activity_type,
+                "container_id": container_id,
+                "message": message,
+                "details": details,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
+            routing_key="event.activity",
+        )
