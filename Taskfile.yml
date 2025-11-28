@@ -17,6 +17,9 @@ includes:
   flow-manager:
     taskfile: ./flow-manager/Taskfile.yml
     dir: ./flow-manager
+  ui:
+    taskfile: ./ui/Taskfile.yml
+    dir: ./ui
 
 tasks:
   init:
@@ -40,7 +43,6 @@ tasks:
 
   build:
     desc: Build all services
-    parallel: true
     cmds:
       - task: kawa:build
       - task: flow:build
@@ -64,3 +66,41 @@ tasks:
     cmds:
       - task: kawa:lint-fix
       # - task: flow-manager:lint-fix
+
+  compose:
+    internal: true
+    cmd: docker compose -f compose.yml {{ .CLI_ARGS }}
+
+  compose:build:
+    cmds:
+      - task: compose
+        vars:
+          CLI_ARGS: build
+
+  compose:up:
+    aliases: [up, start]
+    cmds:
+      - task: compose
+        vars:
+          CLI_ARGS: up -d
+
+  compose:down:
+    aliases: [down, stop]
+    cmds:
+      - task: compose
+        vars:
+          CLI_ARGS: down
+
+  compose:restart:
+    aliases: [restart]
+    cmds:
+      - task: compose
+        vars:
+          CLI_ARGS: restart
+
+  compose:rebuild:
+    aliases: [rebuild]
+    cmds:
+      - task: compose:down
+      - task: compose:build
+      - task: compose:up

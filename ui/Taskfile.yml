@@ -1,0 +1,44 @@
+version: "3"
+
+tasks:
+  compose:
+    internal: true
+    dir: ../
+    cmd: docker compose -f compose.yml {{ .CLI_ARGS }}
+
+  test:
+    cmds:
+      - task: composer
+        vars:
+          CLI_ARGS: run --rm ui php artisan test {{.CLI_ARGS}}
+
+  migrate:
+    cmds:
+      - task: composer
+        vars:
+          CLI_ARGS: run --rm ui php artisan migrate {{.CLI_ARGS}}
+
+  sh:
+    cmds:
+      - task: composer
+        vars:
+          CLI_ARGS: exec ui bash
+
+  tinker:
+    aliases: [ ti ]
+    cmds:
+      - task: composer
+        vars:
+          CLI_ARGS: exec ui php artisan tinker
+
+  db:reset:
+    cmds:
+      - task: composer
+        vars:
+          CLI_ARGS: run --rm ui php artisan migrate:fresh --seed {{.CLI_ARGS}}
+
+  schedule:run:
+    cmds:
+      - task: composer
+        vars:
+          CLI_ARGS: run --rm ui php artisan schedule:run {{.CLI_ARGS}}
