@@ -14,7 +14,12 @@
       <sourceFolder url="file://$MODULE_DIR$/ui/tests" isTestSource="true" packagePrefix="Tests\" />
       <sourceFolder url="file://$MODULE_DIR$/ui/tests/Feature" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/ui/tests/Unit" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/flow-manager/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/kawa/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/ui-bu/vendor/" />
+      <excludeFolder url="file://$MODULE_DIR$/ui/node_modules" />
+      <excludeFolder url="file://$MODULE_DIR$/ui/storage/framework/cache" />
+      <excludeFolder url="file://$MODULE_DIR$/ui/vendor" />
       <excludeFolder url="file://$MODULE_DIR$/ui/vendor/_laravel_idea" />
       <excludeFolder url="file://$MODULE_DIR$/ui/vendor/vendor/bacon" />
       <excludeFolder url="file://$MODULE_DIR$/ui/vendor/vendor/bin" />

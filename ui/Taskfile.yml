@@ -8,9 +8,9 @@ tasks:
 
   copy-vendor:
     cmds:
-      - task: compose
-        vars:
-          CLI_ARGS: cp ui-app:/var/www/html/vendor ./ui/vendor
+#      - task: compose
+#        vars:
+#          CLI_ARGS: cp ui-app:/var/www/html/vendor ./ui/vendor
       - task: compose
         vars:
           CLI_ARGS: cp ui-app:/var/www/html/node_modules ./ui/node_modules
@@ -19,13 +19,13 @@ tasks:
     cmds:
       - task: compose
         vars:
-          CLI_ARGS: run --rm ui-app php artisan test {{.CLI_ARGS}}
+          CLI_ARGS: exec ui-app php artisan test {{.CLI_ARGS}}
 
   migrate:
     cmds:
       - task: compose
         vars:
-          CLI_ARGS: run --rm ui-app php artisan migrate {{.CLI_ARGS}}
+          CLI_ARGS: exec ui-app php artisan migrate {{.CLI_ARGS}}
 
   sh:
     cmds:
@@ -51,10 +51,10 @@ tasks:
     cmds:
       - task: compose
         vars:
-          CLI_ARGS: run --rm ui-app php artisan migrate:fresh --seed {{.CLI_ARGS}}
+          CLI_ARGS: exec ui-app php artisan migrate:fresh --seed {{.CLI_ARGS}}
 
   schedule:run:
     cmds:
       - task: compose
         vars:
-          CLI_ARGS: run --rm ui-app php artisan schedule:run {{.CLI_ARGS}}
+          CLI_ARGS: exec ui-app php artisan schedule:run {{.CLI_ARGS}}

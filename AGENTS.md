@@ -8,7 +8,7 @@
 
 ## Build, Test, and Development Commands
 - Install tooling: `task init` (npm-based helpers). All Python work happens via Task inside Docker with UV; target Python 3.12+. UI commands run via the compose-backed Task targets (not directly on host).
-- Build: `task build` builds kawa/flow/flow-manager dev images; service builds via `task flow:build`, `task flow-manager:build`, `task kawa:build`, `task docs:build`. Bring up the stack with `task compose:up` (Traefik at `traefik.kawaflow.localhost`, UI at `ui.kawaflow.localhost`).
+- Build: `task build` builds kawa/flow/flow-manager dev images; service builds via `task flow:build`, `task flow-manager:build`, `task kawa:build`, `task docs:build`. Bring up the stack with `task compose:up` (Traefik at `traefik.kawaflow.localhost`, UI at `kawaflow.localhost`).
 - Quality: `task lint` (ruff + type checking); `task lint-fix` to autoformat/fix. Dependency changes must use UV inside containers (`task flow:sh-exec -- "uv add pkg"`).
 - Tests: `task test` runs Python suites; filter with pytest args (`task flow-manager:test -- tests/test_api.py -k websocket`). UI tests via `task ui:test -- --filter MyTest` (phpunit). Docs preview: `task docs:serve` (localhost:8000).
 - Compose helpers: `task compose:up|down|restart|rebuild` wrap `docker compose -f compose.yml ...`; prefer these over raw docker commands to keep env consistent.

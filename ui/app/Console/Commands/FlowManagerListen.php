@@ -92,7 +92,8 @@ class FlowManagerListen extends Command
             $config['user'],
             $config['password'],
             $config['vhost'],
-            timeout: $this->timeoutSeconds(),
+            connection_timeout: $this->timeoutSeconds(),
+            read_write_timeout: $this->timeoutSeconds(),
             heartbeat: 0.0,
             channel_rpc_timeout: $this->timeoutSeconds(),
         );
