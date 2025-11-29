@@ -10,11 +10,25 @@
     "license": "MIT",
     "require": {
         "php": "^8.5",
+        "ext-bcmath": "*",
+        "ext-ctype": "*",
+        "ext-curl": "*",
+        "ext-fileinfo": "*",
+        "ext-iconv": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ext-pcntl": "*",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-sodium": "*",
+        "ext-xml": "*",
+        "ext-zip": "*",
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/fortify": "^1.30",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
-        "laravel/wayfinder": "^0.1.9"
+        "laravel/wayfinder": "^0.1.9",
+        "php-amqplib/php-amqplib": "^3.7"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

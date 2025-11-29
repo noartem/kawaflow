@@ -13,6 +13,9 @@ x-ui-defaults: &ui-defaults
     context: ./ui
     target: dev
   volumes:
+    - ./ui:/var/www/html
+    - /var/www/html/vendor
+    - /var/www/html/node_modules
     - ui_storage:/var/www/html/storage
   depends_on:
     - postgres
