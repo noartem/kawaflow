@@ -1,5 +1,5 @@
 <script setup>
-    import FlowGraph from "@/Components/FlowGraph.vue";
+    // import FlowGraph from "@/Components/FlowGraph.vue";
     import AppLayout from "@/layouts/AppLayout.vue";
     import {router, useForm} from "@inertiajs/vue3";
     import {computed, ref} from "vue";
@@ -156,7 +156,8 @@
                         />
                         <p v-if="form.errors.graph" class="mt-2 text-sm text-rose-400">{{ form.errors.graph }}</p>
                         <div class="mt-3">
-                            <FlowGraph :graph="form.graph"/>
+                            {{ form.graph }}
+<!--                            <FlowGraph :graph="form.graph"/>-->
                         </div>
                     </div>
                 </div>

@@ -13,7 +13,9 @@ RUN apt-get update && apt-get install -y \
         && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-configure gd --with-jpeg --with-webp && \
-    docker-php-ext-install -j"$(nproc)" bcmath mbstring pdo_sqlite pdo_pgsql intl zip pcntl sockets
+    docker-php-ext-install -j"$(nproc)" bcmath mbstring pdo_sqlite pdo_pgsql intl zip pcntl sockets && \
+    pecl install redis && \
+    docker-php-ext-enable pcntl sockets redis
 
 COPY --from=composer:2.9 /usr/bin/composer /usr/local/bin/composer
 

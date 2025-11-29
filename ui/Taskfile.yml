@@ -6,6 +6,15 @@ tasks:
     dir: ../
     cmd: docker compose -f compose.yml {{ .CLI_ARGS }}
 
+  copy-vendor:
+    cmds:
+      - task: compose
+        vars:
+          CLI_ARGS: cp ui-app:/var/www/html/vendor ./ui/vendor
+      - task: compose
+        vars:
+          CLI_ARGS: cp ui-app:/var/www/html/node_modules ./ui/node_modules
+
   test:
     cmds:
       - task: compose
@@ -23,6 +32,13 @@ tasks:
       - task: compose
         vars:
           CLI_ARGS: exec ui-app bash
+
+  sh-execute:
+    aliases: [ shc ]
+    cmds:
+      - task: compose
+        vars:
+          CLI_ARGS: exec ui-app bash -c "{{.CLI_ARGS}}"
 
   tinker:
     aliases: [ ti ]

@@ -23,27 +23,27 @@ x-ui-defaults: &ui-defaults
     - rabbitmq
     - flow-manager
   environment:
-    APP_NAME: Kawaflow
-    APP_ENV: production
-    APP_KEY: ${APP_KEY:-}
-    APP_DEBUG: "true"
-    APP_URL: http://ui.kawaflow.localhost
-    DB_CONNECTION: pgsql
-    DB_HOST: postgres
-    DB_PORT: 5432
-    DB_DATABASE: ${POSTGRES_DB:-kawaflow}
-    DB_USERNAME: ${POSTGRES_USER:-kawaflow}
-    DB_PASSWORD: ${POSTGRES_PASSWORD:-kawaflow}
-    REDIS_HOST: redis
-    REDIS_PORT: 6379
-    CACHE_DRIVER: redis
+    APP_NAME: ${APP_NAME}
+    APP_ENV: ${APP_ENV}
+    APP_KEY: ${APP_KEY}
+    APP_DEBUG: ${APP_DEBUG}
+    APP_URL: ${APP_URL}
+    DB_CONNECTION: ${DB_CONNECTION}
+    DB_HOST: ${DB_HOST}
+    DB_PORT: ${DB_PORT}
+    DB_DATABASE: ${POSTGRES_DB}
+    DB_USERNAME: ${POSTGRES_USER}
+    DB_PASSWORD: ${POSTGRES_PASSWORD}
+    REDIS_HOST: ${REDIS_HOST}
+    REDIS_PORT: ${REDIS_PORT}
+    CACHE_STORE: redis
     SESSION_DRIVER: redis
     QUEUE_CONNECTION: redis
-    RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
-    FLOW_MANAGER_COMMAND_QUEUE: ${FLOW_MANAGER_COMMAND_QUEUE:-flow-manager.commands}
-    FLOW_MANAGER_EVENT_EXCHANGE: ${FLOW_MANAGER_EVENT_EXCHANGE:-flow-manager.events}
-    FLOW_MANAGER_EVENT_QUEUE: ${FLOW_MANAGER_EVENT_QUEUE:-flow-manager.ui.events}
-    FLOW_MANAGER_TIMEOUT: ${FLOW_MANAGER_TIMEOUT:-8000}
+    RABBITMQ_URL: ${RABBITMQ_URL}
+    FLOW_MANAGER_COMMAND_QUEUE: ${FLOW_MANAGER_COMMAND_QUEUE}
+    FLOW_MANAGER_EVENT_EXCHANGE: ${FLOW_MANAGER_EVENT_EXCHANGE}
+    FLOW_MANAGER_EVENT_QUEUE: ${FLOW_MANAGER_EVENT_QUEUE}
+    FLOW_MANAGER_TIMEOUT: ${FLOW_MANAGER_TIMEOUT}
 
 services:
   traefik:
@@ -51,11 +51,15 @@ services:
     command:
       - --api.dashboard=true
       - --entrypoints.web.address=:80
+      - --entrypoints.postgres.address=:5432
+      - --entrypoints.redis.address=:6379
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
     ports:
       - "80:80"
       - "8080:8080"
+      - "5432:5432"
+      - "6379:6379"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
@@ -67,36 +71,54 @@ services:
       - traefik.http.routers.traefik.service=api@internal
 
   postgres:
-    image: postgres:16
+    image: postgres:latest
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-kawaflow}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kawaflow}
-      POSTGRES_DB: ${POSTGRES_DB:-kawaflow}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - internal
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.tcp.routers.postgres.rule=HostSNI(`*`)
+      - traefik.tcp.routers.postgres.entrypoints=postgres
+      - traefik.tcp.services.postgres.loadbalancer.server.port=5432
     restart: unless-stopped
 
   redis:
-    image: redis:7-alpine
+    image: redis:alpine3.22
     command: [ "redis-server", "--save", "20", "1", "--loglevel", "warning" ]
     volumes:
       - redis_data:/data
     networks:
       - internal
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.tcp.routers.redis.rule=HostSNI(`*`)
+      - traefik.tcp.routers.redis.entrypoints=redis
+      - traefik.tcp.services.redis.loadbalancer.server.port=6379
     restart: unless-stopped
 
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:4.2.1-management-alpine
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     ports:
       - "5672:5672"
       - "15672:15672"
     networks:
       - internal
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.rabbitmq.rule=Host(`rabbitmq.kawaflow.localhost`)
+      - traefik.http.routers.rabbitmq.entrypoints=web
+      - traefik.http.services.rabbitmq.loadbalancer.server.port=15672
     restart: unless-stopped
 
   flow-manager:
@@ -108,10 +130,10 @@ services:
       PYTHONUNBUFFERED: "1"
       SOCKET_DIR: /tmp/kawaflow/sockets
       MESSAGING_BACKEND: rabbitmq
-      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
-      FLOW_MANAGER_COMMAND_QUEUE: ${FLOW_MANAGER_COMMAND_QUEUE:-flow-manager.commands}
-      FLOW_MANAGER_RESPONSE_QUEUE: ${FLOW_MANAGER_RESPONSE_QUEUE:-flow-manager.responses}
-      FLOW_MANAGER_EVENT_EXCHANGE: ${FLOW_MANAGER_EVENT_EXCHANGE:-flow-manager.events}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      FLOW_MANAGER_COMMAND_QUEUE: ${FLOW_MANAGER_COMMAND_QUEUE}
+      FLOW_MANAGER_RESPONSE_QUEUE: ${FLOW_MANAGER_RESPONSE_QUEUE}
+      FLOW_MANAGER_EVENT_EXCHANGE: ${FLOW_MANAGER_EVENT_EXCHANGE}
     volumes:
       - flow_sockets:/tmp/kawaflow/sockets
       - /var/run/docker.sock:/var/run/docker.sock
@@ -130,7 +152,7 @@ services:
       - traefik.enable=true
       - traefik.http.routers.ui.rule=Host(`ui.kawaflow.localhost`)
       - traefik.http.routers.ui.entrypoints=web
-      - traefik.http.services.ui.loadbalancer.server.port=80
+      - traefik.http.services.ui.loadbalancer.server.port=8000
 
   ui-listener:
     <<: *ui-defaults
