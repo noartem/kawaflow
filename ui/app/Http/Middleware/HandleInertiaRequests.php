@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Flow;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -38,6 +39,14 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+            'sidebarFlows' => fn () => $request->user()
+                ? Flow::query()
+                    ->select(['id', 'name', 'slug', 'status', 'last_started_at', 'last_finished_at'])
+                    ->forUser($request->user())
+                    ->latest('updated_at')
+                    ->limit(4)
+                    ->get()
+                : [],
         ];
     }
 }

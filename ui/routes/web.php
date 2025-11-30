@@ -3,6 +3,7 @@
 use App\Http\Controllers\FlowActionController;
 use App\Http\Controllers\FlowController;
 use App\Http\Controllers\FlowLogController;
+use App\Http\Controllers\DashboardController;
 use App\Models\Flow;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -14,9 +15,9 @@ Route::get('/', static function () {
     ]);
 })->name('home');
 
-Route::get('dashboard', static function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('dashboard', DashboardController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('flows', [FlowController::class, 'index'])->name('flows.index')->can('view-any', Flow::class);

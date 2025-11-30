@@ -10,11 +10,16 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarGroup,
+    SidebarGroupLabel,
 } from '@/components/ui/sidebar';
+import { urlIsActive } from '@/lib/utils';
 import { dashboard } from '@/routes';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
+import { index as flowsIndex, show as flowShow } from '@/routes/flows';
+import { type FlowSidebarItem, type NavItem } from '@/types';
+import { Link, usePage } from '@inertiajs/vue3';
+import { BookOpen, Folder, LayoutGrid, Workflow, Activity } from 'lucide-vue-next';
+import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -22,6 +27,11 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Flows',
+        href: flowsIndex().url,
+        icon: Workflow,
     },
 ];
 
@@ -37,6 +47,22 @@ const footerNavItems: NavItem[] = [
         icon: BookOpen,
     },
 ];
+
+const page = usePage();
+const sidebarFlows = computed<FlowSidebarItem[]>(() => (page.props.sidebarFlows as FlowSidebarItem[] | undefined) ?? []);
+
+const statusTone = (status?: string | null) => {
+    switch (status) {
+        case 'running':
+            return 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30';
+        case 'error':
+            return 'bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30';
+        case 'stopped':
+            return 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30';
+        default:
+            return 'bg-sidebar-accent/50 text-sidebar-foreground/80 ring-1 ring-sidebar-border';
+    }
+};
 </script>
 
 <template>
@@ -55,6 +81,49 @@ const footerNavItems: NavItem[] = [
 
         <SidebarContent>
             <NavMain :items="mainNavItems" />
+
+            <SidebarGroup v-if="sidebarFlows.length" class="px-2 pt-2">
+                <SidebarGroupLabel>Последние flow</SidebarGroupLabel>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            as-child
+                            size="sm"
+                            :tooltip="'Все flow'"
+                            :is-active="urlIsActive(flowsIndex().url, page.url)"
+                        >
+                            <Link :href="flowsIndex().url" class="flex items-center gap-2">
+                                <Workflow class="size-4" />
+                                <span>Все потоки</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+
+                    <SidebarMenuItem
+                        v-for="flow in sidebarFlows"
+                        :key="flow.id"
+                        class="group/sidebar-flow"
+                    >
+                        <SidebarMenuButton
+                            as-child
+                            size="sm"
+                            :tooltip="flow.name"
+                            :is-active="urlIsActive(flowShow({ flow: flow.id }).url, page.url)"
+                        >
+                            <Link :href="flowShow({ flow: flow.id }).url" class="flex items-center gap-2">
+                                <Activity class="size-4 text-muted-foreground" />
+                                <span class="truncate">{{ flow.name }}</span>
+                                <span
+                                    class="ml-auto rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                                    :class="statusTone(flow.status)"
+                                >
+                                    {{ flow.status ?? 'draft' }}
+                                </span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarGroup>
         </SidebarContent>
 
         <SidebarFooter>

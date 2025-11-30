@@ -1,128 +1,254 @@
-<script setup>
-    import AppLayout from "@/Layouts/AppLayout.vue";
-    import {Link, useForm} from "@inertiajs/vue3";
+<script setup lang="ts">
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { index as flowsIndex, show as flowShow } from '@/routes/flows';
+import type { FlowSidebarItem } from '@/types';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Activity, Clock3, FileCode, Plus, Sparkles, Workflow } from 'lucide-vue-next';
 
-    defineOptions({layout: AppLayout});
+interface Flow extends FlowSidebarItem {
+    description?: string | null;
+    runs_count?: number;
+    container_id?: string | null;
+    updated_at?: string;
+}
 
-    const props = defineProps({
-        flows: {
-            type: Array,
-            default: () => [],
-        },
+defineOptions({ layout: AppLayout });
+
+const props = defineProps<{
+    flows: Flow[];
+}>();
+
+const createForm = useForm({
+    name: '',
+    description: '',
+    code: `from kawa import ActorSystem\n\n# entry point\nif __name__ == "__main__":\n    print("hello from kawaflow")\n`,
+    graph: {
+        nodes: [],
+        edges: [],
+    },
+});
+
+const createFlow = () => {
+    createForm.post('/flows', {
+        preserveScroll: true,
+        onSuccess: () => createForm.reset('name', 'description'),
     });
+};
 
-    const createForm = useForm({
-        name: "",
-        description: "",
-        code: `from kawa import ActorSystem\n\n# entry point\nif __name__ == "__main__":\n    print("hello from kawaflow")\n`,
-        graph: {
-            nodes: [],
-            edges: [],
-        },
-    });
+const flowMetrics = computed(() => {
+    const total = props.flows.length;
+    const running = props.flows.filter((flow) => flow.status === 'running').length;
+    const failing = props.flows.filter((flow) => flow.status === 'error').length;
+    const drafts = props.flows.filter((flow) => !flow.status || flow.status === 'draft').length;
+    const totalRuns = props.flows.reduce((sum, flow) => sum + (flow.runs_count ?? 0), 0);
 
-    const createFlow = () => {
-        createForm.post("/flows", {
-            preserveScroll: true,
-            onSuccess: () => createForm.reset("name", "description"),
-        });
-    };
+    return { total, running, failing, drafts, totalRuns };
+});
 
-    const statusColor = (status) => {
-        if (status === "running") return "bg-emerald-500/20 text-emerald-300";
-        if (status === "error") return "bg-rose-500/20 text-rose-300";
-        if (status === "stopped") return "bg-amber-500/20 text-amber-300";
-        return "bg-slate-700 text-slate-200";
-    };
+const statusTone = (status?: string | null) => {
+    switch (status) {
+        case 'running':
+            return 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30';
+        case 'error':
+            return 'bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30';
+        case 'stopped':
+            return 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30';
+        default:
+            return 'bg-muted text-muted-foreground ring-1 ring-border';
+    }
+};
+
+const formatDate = (value?: string | null) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString();
+};
 </script>
 
 <template>
-    <div class="space-y-6">
+    <Head title="Flows" />
+
+    <div class="space-y-6 px-4 pb-12 pt-2">
         <div
-            class="flex flex-col gap-3 border-b border-slate-800 pb-4 md:flex-row md:items-center md:justify-between">
-            <div>
-                <p class="text-sm uppercase tracking-widest text-slate-500">Flows</p>
-                <h1 class="text-2xl font-semibold text-slate-100">Ваши потоки</h1>
-                <p class="text-sm text-slate-400">Админ видит все, обычный пользователь — только свои.</p>
-            </div>
-            <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-sm text-slate-200">
-                Всего: <span class="font-semibold text-sky-300">{{ props.flows.length }}</span>
+            class="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-primary/10 via-background to-background p-6 shadow-sm"
+        >
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,theme(colors.primary/10),transparent_45%)]" />
+            <div class="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div class="space-y-2">
+                    <p class="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Flow manager</p>
+                    <h1 class="text-3xl font-semibold leading-tight">Ваши потоки</h1>
+                    <p class="max-w-2xl text-sm text-muted-foreground">
+                        Управляйте кодом, статусами и логами из единой панели. Администратор видит все, пользователь —
+                        только свои потоки.
+                    </p>
+                    <div class="flex flex-wrap gap-3 pt-2">
+                        <Badge variant="outline" class="bg-primary/10 text-primary">{{ flowMetrics.total }} всего</Badge>
+                        <Badge variant="outline" class="bg-emerald-500/10 text-emerald-300">{{ flowMetrics.running }} в работе</Badge>
+                        <Badge variant="outline" class="bg-rose-500/10 text-rose-300">{{ flowMetrics.failing }} с ошибками</Badge>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <Button as-child>
+                        <Link href="#flow-create">
+                            <Plus class="size-4" />
+                            Новый flow
+                        </Link>
+                    </Button>
+                    <Button variant="outline" as-child>
+                        <Link :href="flowsIndex().url">
+                            <Workflow class="size-4" />
+                            Перейти к списку
+                        </Link>
+                    </Button>
+                </div>
             </div>
         </div>
 
-        <div class="grid gap-4 lg:grid-cols-[2fr_3fr]">
-            <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-                <h2 class="text-lg font-semibold text-slate-100">Новый flow</h2>
-                <form class="mt-4 space-y-4" @submit.prevent="createFlow">
-                    <div>
-                        <label class="mb-1 block text-sm text-slate-300">Название</label>
-                        <input
-                            v-model="createForm.name"
-                            type="text"
-                            required
-                            class="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40"
-                        />
-                        <p v-if="createForm.errors.name" class="mt-1 text-sm text-rose-400">
-                            {{ createForm.errors.name }}</p>
-                    </div>
-                    <div>
-                        <label class="mb-1 block text-sm text-slate-300">Описание</label>
-                        <textarea
-                            v-model="createForm.description"
-                            rows="2"
-                            class="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40"
-                            placeholder="Что делает поток?"
-                        />
-                    </div>
-                    <div>
-                        <label class="mb-1 block text-sm text-slate-300">Стартовый код</label>
-                        <textarea
-                            v-model="createForm.code"
-                            rows="6"
-                            class="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40"
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        class="w-full rounded-lg bg-sky-500 px-4 py-2 font-semibold text-slate-900 transition hover:bg-sky-400 disabled:opacity-50"
-                        :disabled="createForm.processing"
-                    >
-                        Создать flow
-                    </button>
-                </form>
-            </div>
+        <div class="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
+            <Card id="flow-create">
+                <CardHeader>
+                    <CardTitle>Создать новый flow</CardTitle>
+                    <CardDescription>Добавьте название, опишите идею и вставьте стартовый код</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form class="space-y-4" @submit.prevent="createFlow">
+                        <div class="space-y-2">
+                            <Label for="flow-name">Название</Label>
+                            <Input id="flow-name" v-model="createForm.name" required placeholder="Например, ETL nightly" />
+                            <p v-if="createForm.errors.name" class="text-sm text-destructive">{{ createForm.errors.name }}</p>
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="flow-description">Описание</Label>
+                            <Textarea
+                                id="flow-description"
+                                v-model="createForm.description"
+                                placeholder="Что делает поток? Какие сервисы трогает?"
+                                class="min-h-[96px]"
+                            />
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <Label for="flow-code">Стартовый код</Label>
+                                <span class="text-xs text-muted-foreground">Будет сохранён в volume</span>
+                            </div>
+                            <Textarea
+                                id="flow-code"
+                                v-model="createForm.code"
+                                class="font-mono"
+                                rows="10"
+                            />
+                            <p v-if="createForm.errors.code" class="text-sm text-destructive">{{ createForm.errors.code }}</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <Button type="submit" :disabled="createForm.processing">
+                                <Sparkles class="size-4" />
+                                Создать flow
+                            </Button>
+                            <p class="text-xs text-muted-foreground">Формат графа nodes/edges можно добавить позже.</p>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
 
-            <div class="space-y-4">
-                <div
-                    v-for="flow in props.flows"
-                    :key="flow.id"
-                    class="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow"
-                >
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <Link :href="`/flows/${flow.id}`"
-                                  class="text-lg font-semibold text-slate-100 hover:text-sky-300">
+            <Card class="bg-muted/30">
+                <CardHeader>
+                    <CardTitle>Сводка по flows</CardTitle>
+                    <CardDescription>Срез по статусам и активности</CardDescription>
+                </CardHeader>
+                <CardContent class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="rounded-lg border border-border/60 bg-background p-3 shadow-xs">
+                            <p class="text-xs text-muted-foreground">Запусков всего</p>
+                            <p class="text-2xl font-semibold">{{ flowMetrics.totalRuns }}</p>
+                        </div>
+                        <div class="rounded-lg border border-border/60 bg-background p-3 shadow-xs">
+                            <p class="text-xs text-muted-foreground">Черновики</p>
+                            <p class="text-2xl font-semibold">{{ flowMetrics.drafts }}</p>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-xs uppercase tracking-wide text-muted-foreground">Последние изменения</p>
+                        <div
+                            v-for="flow in props.flows.slice(0, 3)"
+                            :key="flow.id"
+                            class="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-3"
+                        >
+                            <div class="flex flex-col">
+                                <span class="text-sm font-semibold">{{ flow.name }}</span>
+                                <span class="text-xs text-muted-foreground">{{ formatDate(flow.updated_at) }}</span>
+                            </div>
+                            <Badge :class="statusTone(flow.status)" variant="outline">
+                                {{ flow.status ?? 'draft' }}
+                            </Badge>
+                        </div>
+                        <div v-if="props.flows.length === 0" class="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+                            Нет сохранённых потоков. Создайте первый, чтобы увидеть статистику.
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+
+        <Card>
+            <CardHeader class="pb-3">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <CardTitle>Список потоков</CardTitle>
+                        <CardDescription>Статусы, описание и краткая активность</CardDescription>
+                    </div>
+                    <Badge variant="outline" class="bg-primary/10 text-primary">{{ flowMetrics.total }} потоков</Badge>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div v-if="props.flows.length" class="divide-y divide-border">
+                    <div
+                        v-for="flow in props.flows"
+                        :key="flow.id"
+                        class="flex flex-col gap-2 py-3 md:flex-row md:items-center md:justify-between"
+                    >
+                        <div class="space-y-1">
+                            <Link
+                                :href="flowShow({ flow: flow.id }).url"
+                                class="inline-flex items-center gap-2 text-base font-semibold hover:text-primary"
+                            >
+                                <Workflow class="size-4 text-muted-foreground" />
                                 {{ flow.name }}
                             </Link>
-                            <p class="text-sm text-slate-400">{{ flow.description }}</p>
+                            <p class="text-sm text-muted-foreground">{{ flow.description || 'Описание не заполнено' }}</p>
+                            <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                                <span class="inline-flex items-center gap-1">
+                                    <Activity class="size-3" /> Запусков: {{ flow.runs_count ?? 0 }}
+                                </span>
+                                <span class="inline-flex items-center gap-1">
+                                    <Clock3 class="size-3" /> Обновлён: {{ formatDate(flow.updated_at) }}
+                                </span>
+                            </div>
                         </div>
-                        <span class="rounded-full px-3 py-1 text-xs font-semibold"
-                              :class="statusColor(flow.status)">
-              {{ flow.status || "draft" }}
-            </span>
-                    </div>
-                    <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-400">
-                        <span class="rounded bg-slate-800 px-2 py-1">Запусков: {{ flow.runs_count }}</span>
-                        <span v-if="flow.container_id" class="rounded bg-slate-800 px-2 py-1">Container: {{
-                                flow.container_id.slice(0, 8)
-                            }}</span>
+                        <div class="flex items-center gap-3 self-start md:self-center">
+                            <Badge :class="statusTone(flow.status)" variant="outline">
+                                {{ flow.status ?? 'draft' }}
+                            </Badge>
+                            <Button as-child variant="outline" size="sm">
+                                <Link :href="flowShow({ flow: flow.id }).url">
+                                    <FileCode class="size-4" />
+                                    Открыть
+                                </Link>
+                            </Button>
+                        </div>
                     </div>
                 </div>
-                <div v-if="!props.flows.length"
-                     class="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-6 text-slate-400">
-                    Пока нет потоков. Создайте первый, добавьте код и граф, затем запустите.
+                <div v-else class="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
+                    Пока нет потоков. Создайте первый, добавьте код и запустите его.
                 </div>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     </div>
 </template>

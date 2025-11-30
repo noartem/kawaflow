@@ -17,6 +17,39 @@ export interface NavItem {
     isActive?: boolean;
 }
 
+export interface FlowSidebarItem {
+    id: number;
+    name: string;
+    slug: string;
+    status?: string | null;
+    last_started_at?: string | null;
+    last_finished_at?: string | null;
+}
+
+export interface FlowRunSummary {
+    id: number;
+    status?: string | null;
+    started_at?: string | null;
+    finished_at?: string | null;
+    created_at: string;
+    flow: {
+        id: number;
+        name: string;
+        slug: string;
+        status?: string | null;
+    };
+}
+
+export interface FlowStatsSummary {
+    total: number;
+    running: number;
+    stopped: number;
+    errors: number;
+    withContainer: number;
+    lastUpdatedAt: string | null;
+    runsByStatus: { status: string | null; total: number }[];
+}
+
 export type AppPageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
@@ -24,6 +57,7 @@ export type AppPageProps<
     quote: { message: string; author: string };
     auth: Auth;
     sidebarOpen: boolean;
+    sidebarFlows?: FlowSidebarItem[];
 };
 
 export interface User {
