@@ -16,6 +16,10 @@ export default defineConfig(({ mode }) => {
                 host: env.VITE_HMR_HOST,
                 port: env.VITE_HMR_PORT,
             },
+            watch: {
+                usePolling: true,
+                interval: 200,
+            },
             cors: {
                 origin: env.APP_URL,
                 credentials: true,

@@ -76,7 +76,6 @@
 </script>
 
 <template>
-    <AppLayout>
         <div class="space-y-6">
             <div
                 class="flex flex-col gap-4 border-b border-slate-800 pb-4 md:flex-row md:items-center md:justify-between">
@@ -218,5 +217,4 @@
                 </div>
             </div>
         </div>
-    </AppLayout>
 </template>

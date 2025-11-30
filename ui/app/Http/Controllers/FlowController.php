@@ -20,7 +20,7 @@ class FlowController extends Controller
             ->forUser($request->user())
             ->latest();
 
-        return Inertia::render('Flows/Index', [
+        return Inertia::render('flows/Index', [
             'flows' => $query->get(),
         ]);
     }
@@ -54,7 +54,7 @@ class FlowController extends Controller
     }
 
     public function show(Flow $flow, FlowService $flows): Response {
-        return Inertia::render('Flows/Show', [
+        return Inertia::render('flows/Show', [
             'flow' => $flow->load('user'),
             'runs' => $flow->runs()->latest()->limit(5)->get(),
             'logs' => $flow->logs()->latest()->limit(50)->get(),

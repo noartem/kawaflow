@@ -11,18 +11,16 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::factory()->admin()->create([
+        User::factory()->admin()->withoutTwoFactor()->create([
             'name' => 'Admin',
-            'email' => env('ADMIN_EMAIL', 'admin@kawaflow.local'),
-            'password' => Hash::make(env('ADMIN_PASSWORD', 'admin1234')),
-            'role' => Role::ADMIN,
+            'email' => 'admin@kawaflow.localhost',
+            'password' => Hash::make('12345678'),
         ]);
 
-        User::factory()->create([
-            'name' => 'Demo User',
-            'email' => 'user@kawaflow.local',
-            'password' => Hash::make('password123'),
-            'role' => Role::USER,
+        User::factory()->withoutTwoFactor()->create([
+            'name' => 'Artem Noskov',
+            'email' => 'artem@noartem.ru',
+            'password' => Hash::make('12345678'),
         ]);
     }
 }
