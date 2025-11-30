@@ -159,9 +159,11 @@ services:
       - traefik.enable=true
       - traefik.http.routers.ui.rule=Host(`kawaflow.localhost`)
       - traefik.http.routers.ui.entrypoints=web
+      - traefik.http.routers.ui.service=ui
       - traefik.http.services.ui.loadbalancer.server.port=8000
       - traefik.http.routers.ui-vite.rule=Host(`kawaflow.localhost`)
       - traefik.http.routers.ui-vite.entrypoints=vite
+      - traefik.http.routers.ui-vite.service=ui-vite
       - traefik.http.services.ui-vite.loadbalancer.server.port=5173
       - traefik.docker.network=kawaflow_proxy
 

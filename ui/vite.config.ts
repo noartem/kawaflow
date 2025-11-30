@@ -16,6 +16,10 @@ export default defineConfig(({ mode }) => {
                 host: env.VITE_HMR_HOST,
                 port: env.VITE_HMR_PORT,
             },
+            cors: {
+                origin: env.APP_URL,
+                credentials: true,
+            },
         },
         plugins: [
             laravel({
