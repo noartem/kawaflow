@@ -31,6 +31,10 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $attributes = [
+        'role' => Role::USER,
+    ];
+
     protected function casts(): array
     {
         return [
