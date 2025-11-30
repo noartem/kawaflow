@@ -22,5 +22,9 @@ class DatabaseSeeder extends Seeder
             'email' => 'artem@noartem.ru',
             'password' => Hash::make('12345678'),
         ]);
+
+        if (app()->environment(['local', 'dev'])) {
+            $this->callOnce(LocalDemoSeeder::class);
+        }
     }
 }

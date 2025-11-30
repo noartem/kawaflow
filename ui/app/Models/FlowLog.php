@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FlowLog extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'flow_id',
         'flow_run_id',

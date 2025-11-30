@@ -2,13 +2,10 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { index as flowsIndex, show as flowShow } from '@/routes/flows';
+import { create as flowCreate, index as flowsIndex, show as flowShow } from '@/routes/flows';
 import type { FlowSidebarItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { Activity, Clock3, FileCode, Plus, Sparkles, Workflow } from 'lucide-vue-next';
 
@@ -24,23 +21,6 @@ defineOptions({ layout: AppLayout });
 const props = defineProps<{
     flows: Flow[];
 }>();
-
-const createForm = useForm({
-    name: '',
-    description: '',
-    code: `from kawa import ActorSystem\n\n# entry point\nif __name__ == "__main__":\n    print("hello from kawaflow")\n`,
-    graph: {
-        nodes: [],
-        edges: [],
-    },
-});
-
-const createFlow = () => {
-    createForm.post('/flows', {
-        preserveScroll: true,
-        onSuccess: () => createForm.reset('name', 'description'),
-    });
-};
 
 const flowMetrics = computed(() => {
     const total = props.flows.length;
@@ -71,6 +51,8 @@ const formatDate = (value?: string | null) => {
     if (Number.isNaN(date.getTime())) return value;
     return date.toLocaleString();
 };
+
+const highlightedFlows = computed(() => props.flows.slice(0, 4));
 </script>
 
 <template>
@@ -86,8 +68,8 @@ const formatDate = (value?: string | null) => {
                     <p class="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Flow manager</p>
                     <h1 class="text-3xl font-semibold leading-tight">Ваши потоки</h1>
                     <p class="max-w-2xl text-sm text-muted-foreground">
-                        Управляйте кодом, статусами и логами из единой панели. Администратор видит все, пользователь —
-                        только свои потоки.
+                        Управляйте кодом, статусами и логами из единой панели. Создание и редактирование теперь вынесено
+                        на отдельную страницу с конструктором.
                     </p>
                     <div class="flex flex-wrap gap-3 pt-2">
                         <Badge variant="outline" class="bg-primary/10 text-primary">{{ flowMetrics.total }} всего</Badge>
@@ -97,15 +79,15 @@ const formatDate = (value?: string | null) => {
                 </div>
                 <div class="flex flex-wrap gap-3">
                     <Button as-child>
-                        <Link href="#flow-create">
+                        <Link :href="flowCreate().url">
                             <Plus class="size-4" />
-                            Новый flow
+                            Создать flow
                         </Link>
                     </Button>
                     <Button variant="outline" as-child>
-                        <Link :href="flowsIndex().url">
+                        <Link href="/dashboard">
                             <Workflow class="size-4" />
-                            Перейти к списку
+                            Дашборд
                         </Link>
                     </Button>
                 </div>
@@ -113,48 +95,69 @@ const formatDate = (value?: string | null) => {
         </div>
 
         <div class="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
-            <Card id="flow-create">
+            <Card>
                 <CardHeader>
-                    <CardTitle>Создать новый flow</CardTitle>
-                    <CardDescription>Добавьте название, опишите идею и вставьте стартовый код</CardDescription>
+                    <CardTitle>Конструктор потоков</CardTitle>
+                    <CardDescription>Создание перенесено в отдельный экран: код, граф и метаданные в одном месте.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <form class="space-y-4" @submit.prevent="createFlow">
-                        <div class="space-y-2">
-                            <Label for="flow-name">Название</Label>
-                            <Input id="flow-name" v-model="createForm.name" required placeholder="Например, ETL nightly" />
-                            <p v-if="createForm.errors.name" class="text-sm text-destructive">{{ createForm.errors.name }}</p>
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="flow-description">Описание</Label>
-                            <Textarea
-                                id="flow-description"
-                                v-model="createForm.description"
-                                placeholder="Что делает поток? Какие сервисы трогает?"
-                                class="min-h-[96px]"
-                            />
-                        </div>
-                        <div class="space-y-2">
-                            <div class="flex items-center justify-between">
-                                <Label for="flow-code">Стартовый код</Label>
-                                <span class="text-xs text-muted-foreground">Будет сохранён в volume</span>
+                <CardContent class="space-y-4">
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <div class="rounded-xl border border-border/70 bg-muted/30 p-4 shadow-xs">
+                            <div class="flex items-center gap-2 text-sm font-semibold">
+                                <Sparkles class="size-4 text-primary" />
+                                Быстрый старт
                             </div>
-                            <Textarea
-                                id="flow-code"
-                                v-model="createForm.code"
-                                class="font-mono"
-                                rows="10"
-                            />
-                            <p v-if="createForm.errors.code" class="text-sm text-destructive">{{ createForm.errors.code }}</p>
+                            <p class="mt-1 text-sm text-muted-foreground">
+                                Шаблон main.py, пустой граф и подсказки по статусам. Создайте черновик и запустите его позже.
+                            </p>
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                <Badge variant="outline" class="bg-background/70 text-muted-foreground">main.py</Badge>
+                                <Badge variant="outline" class="bg-background/70 text-muted-foreground">Graph JSON</Badge>
+                                <Badge variant="outline" class="bg-background/70 text-muted-foreground">Логи в UI</Badge>
+                            </div>
+                            <div class="mt-4 flex flex-wrap gap-3">
+                                <Button as-child>
+                                    <Link :href="flowCreate().url">
+                                        <Plus class="size-4" />
+                                        Новый flow
+                                    </Link>
+                                </Button>
+                                <Button variant="outline" as-child>
+                                    <Link :href="flowsIndex().url">
+                                        <Workflow class="size-4" />
+                                        Все потоки
+                                    </Link>
+                                </Button>
+                            </div>
                         </div>
-                        <div class="flex flex-wrap items-center gap-3">
-                            <Button type="submit" :disabled="createForm.processing">
-                                <Sparkles class="size-4" />
-                                Создать flow
-                            </Button>
-                            <p class="text-xs text-muted-foreground">Формат графа nodes/edges можно добавить позже.</p>
+                        <div class="rounded-xl border border-border/70 bg-muted/20 p-4 shadow-xs">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2 text-sm font-semibold">
+                                    <Activity class="size-4 text-muted-foreground" />
+                                    Последние изменения
+                                </div>
+                                <Badge variant="outline" class="bg-background/80 text-muted-foreground">{{ highlightedFlows.length }} потоков</Badge>
+                            </div>
+                            <div v-if="highlightedFlows.length" class="mt-3 space-y-2">
+                                <div
+                                    v-for="flow in highlightedFlows"
+                                    :key="flow.id"
+                                    class="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-3"
+                                >
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-semibold">{{ flow.name }}</span>
+                                        <span class="text-xs text-muted-foreground">{{ formatDate(flow.updated_at) }}</span>
+                                    </div>
+                                    <Badge :class="statusTone(flow.status)" variant="outline">
+                                        {{ flow.status ?? 'draft' }}
+                                    </Badge>
+                                </div>
+                            </div>
+                            <div v-else class="mt-3 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+                                Пока нет потоков — создайте первый, чтобы увидеть историю изменений.
+                            </div>
                         </div>
-                    </form>
+                    </div>
                 </CardContent>
             </Card>
 

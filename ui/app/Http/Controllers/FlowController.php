@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Flow;
-use App\Services\FlowManagerClient;
 use App\Services\FlowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,6 +12,16 @@ use Inertia\Response;
 
 class FlowController extends Controller
 {
+    private const DEFAULT_CODE = <<<PY
+from kawa import ActorSystem
+
+def main():
+    print("hello from kawaflow")
+
+if __name__ == "__main__":
+    main()
+PY;
+
     public function index(Request $request): Response
     {
         $query = Flow::query()
@@ -22,6 +31,39 @@ class FlowController extends Controller
 
         return Inertia::render('flows/Index', [
             'flows' => $query->get(),
+        ]);
+    }
+
+    public function create(Request $request): Response
+    {
+        $user = $request->user();
+
+        return Inertia::render('flows/Editor', [
+            'mode' => 'create',
+            'flow' => [
+                'id' => null,
+                'name' => 'Новый flow',
+                'slug' => null,
+                'description' => '',
+                'code' => self::DEFAULT_CODE,
+                'graph' => $this->defaultGraph(),
+                'status' => 'draft',
+                'runs_count' => 0,
+                'last_started_at' => null,
+                'last_finished_at' => null,
+                'user' => [
+                    'name' => $user?->name,
+                ],
+            ],
+            'runs' => [],
+            'logs' => [],
+            'status' => null,
+            'runStats' => [],
+            'permissions' => [
+                'canRun' => false,
+                'canUpdate' => $request->user()->can('create', Flow::class),
+                'canDelete' => false,
+            ],
         ]);
     }
 
@@ -53,14 +95,27 @@ class FlowController extends Controller
         return redirect()->route('flows.show', $flow)->with('success', 'Flow создан.');
     }
 
-    public function show(Flow $flow, FlowService $flows): Response {
-        return Inertia::render('flows/Show', [
-            'flow' => $flow->load('user'),
-            'runs' => $flow->runs()->latest()->limit(5)->get(),
-            'logs' => $flow->logs()->latest()->limit(50)->get(),
+    public function show(Request $request, Flow $flow, FlowService $flows): Response
+    {
+        $flow->load('user')->loadCount('runs');
+
+        $runs = $flow->runs()->latest()->limit(6)->get();
+        $logs = $flow->logs()->latest()->limit(50)->get();
+
+        return Inertia::render('flows/Editor', [
+            'mode' => 'edit',
+            'flow' => $flow,
+            'runs' => $runs,
+            'logs' => $logs,
             'status' => $flow->container_id
                 ? $flows->getStatus($flow)
                 : null,
+            'runStats' => $this->runStats($flow),
+            'permissions' => [
+                'canRun' => $request->user()->can('run', $flow),
+                'canUpdate' => $request->user()->can('update', $flow),
+                'canDelete' => $request->user()->can('delete', $flow),
+            ],
         ]);
     }
 
@@ -85,5 +140,33 @@ class FlowController extends Controller
         $flow->delete();
 
         return redirect()->route('flows.index')->with('success', 'Flow удален.');
+    }
+
+    /**
+     * @return array{nodes: array<int, mixed>, edges: array<int, mixed>}
+     */
+    private function defaultGraph(): array
+    {
+        return [
+            'nodes' => [],
+            'edges' => [],
+        ];
+    }
+
+    /**
+     * @return array<int, array{status: string, total: int}>
+     */
+    private function runStats(Flow $flow): array
+    {
+        return $flow->runs()
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->get()
+            ->map(static fn ($row) => [
+                'status' => $row->status ?? 'unknown',
+                'total' => (int) $row->total,
+            ])
+            ->values()
+            ->all();
     }
 }

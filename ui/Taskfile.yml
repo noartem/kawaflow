@@ -53,6 +53,12 @@ tasks:
         vars:
           CLI_ARGS: exec ui-app php artisan migrate:fresh --seed {{.CLI_ARGS}}
 
+  db:local-seed:
+    cmds:
+      - task: compose
+        vars:
+          CLI_ARGS: exec ui-app php artisan db:seed --class="Database\\Seeders\\LocalDemoSeeder" {{.CLI_ARGS}}
+
   schedule:run:
     cmds:
       - task: compose
