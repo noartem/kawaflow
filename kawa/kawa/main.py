@@ -15,12 +15,18 @@ def event(cls):
 
 
 def actor(
-    receivs: Optional[tuple[EventClassOrFilter, ...]] = None,
-    sends: Optional[tuple[type[object], ...]] = None,
+    receivs: Optional[Union[tuple[EventClassOrFilter, ...], EventClassOrFilter]] = None,
+    sends: Optional[Union[tuple[type[object], ...], type[object]] = None,
     min_instances: Optional[int] = None,
     max_instances: Optional[int] = None,
     keep_instance: Optional[timedelta] = None,
 ):
+    if not isinstance(receivs, tuple):
+        receivs = (receivs,)
+
+    if not isinstance(sends, tuple):
+        sends = (sends,)
+
     def decorator(actorFuncOrClass: ActorFuncOrClass):
         registry.register_actor(
             ActorDefinition(

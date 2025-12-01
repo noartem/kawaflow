@@ -42,8 +42,8 @@ def CreateDailyMessageActor(ctx: Context, event):
 
 
 @actor(
-    receivs=(GetDateWeatherInfoEvent,),
-    sends=(DateWeatherInfoEvent, CronEvent),
+    receivs=GetDateWeatherInfoEvent,
+    sends=DateWeatherInfoEvent,
     max_instances=1,
     keep_instance=timedelta(minutes=1),
 )
