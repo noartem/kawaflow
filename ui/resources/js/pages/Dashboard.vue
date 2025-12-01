@@ -86,16 +86,12 @@ const failingPercent = computed(() => {
                 <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,theme(colors.primary/10),transparent_35%)]" />
                 <div class="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div class="space-y-3">
-                        <p class="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Панель потоков</p>
-                        <h1 class="text-3xl font-semibold leading-tight">Flow dashboard</h1>
-                        <p class="max-w-2xl text-sm text-muted-foreground">
-                            {{ headline }}: запусков {{ totalRuns }} зафиксировано в системе.
-                        </p>
+                        <h1 class="text-3xl font-semibold leading-tight">Панель потоков</h1>
                         <div class="flex flex-wrap gap-3 pt-2">
                             <Button as-child>
                                 <Link :href="flowsIndex().url">
                                     <Plus class="size-4" />
-                                    Новый flow
+                                    Новый поток
                                 </Link>
                             </Button>
                             <Button variant="outline" as-child>
@@ -112,7 +108,7 @@ const failingPercent = computed(() => {
                             <div class="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Всего</div>
                             <div class="text-3xl font-semibold">{{ flowStats?.total ?? 0 }}</div>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                        <div class="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
                             <div class="flex items-center gap-2">
                                 <span class="h-2 w-2 rounded-full bg-emerald-400/70" />
                                 {{ flowStats?.running ?? 0 }} running
@@ -125,71 +121,12 @@ const failingPercent = computed(() => {
                                 <span class="h-2 w-2 rounded-full bg-rose-400/70" />
                                 {{ flowStats?.errors ?? 0 }} errors
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span class="h-2 w-2 rounded-full bg-sky-400/70" />
-                                {{ flowStats?.withContainer ?? 0 }} контейнеров
-                            </div>
                         </div>
                         <p class="text-[11px] text-muted-foreground">
                             Последнее обновление: {{ formatDate(flowStats?.lastUpdatedAt) }}
                         </p>
                     </div>
                 </div>
-            </div>
-
-            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <Card>
-                    <CardHeader class="pb-2">
-                        <CardTitle class="text-sm text-muted-foreground">Активные потоки</CardTitle>
-                        <CardDescription>В работе прямо сейчас</CardDescription>
-                    </CardHeader>
-                    <CardContent class="flex items-end justify-between">
-                        <div class="text-3xl font-semibold">{{ flowStats?.running ?? 0 }}</div>
-                        <Badge class="bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30" variant="outline">
-                            {{ activePercent }}%
-                        </Badge>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader class="pb-2">
-                        <CardTitle class="text-sm text-muted-foreground">Ошибки / деградации</CardTitle>
-                        <CardDescription>Сколько требует внимания</CardDescription>
-                    </CardHeader>
-                    <CardContent class="flex items-end justify-between">
-                        <div class="text-3xl font-semibold">{{ flowStats?.errors ?? 0 }}</div>
-                        <Badge class="bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/30" variant="outline">
-                            {{ failingPercent }}%
-                        </Badge>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader class="pb-2">
-                        <CardTitle class="text-sm text-muted-foreground">Всего запусков</CardTitle>
-                        <CardDescription>Подсуммировано по статусам</CardDescription>
-                    </CardHeader>
-                    <CardContent class="flex items-end justify-between">
-                        <div class="text-3xl font-semibold">{{ totalRuns }}</div>
-                        <Badge variant="outline" class="bg-primary/10 text-primary">
-                            {{ flowStats?.runsByStatus?.length ?? 0 }} статуса
-                        </Badge>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader class="pb-2">
-                        <CardTitle class="text-sm text-muted-foreground">Последний апдейт</CardTitle>
-                        <CardDescription>Когда менялись flow</CardDescription>
-                    </CardHeader>
-                    <CardContent class="space-y-2 text-sm text-muted-foreground">
-                        <div class="flex items-center gap-2">
-                            <Clock3 class="size-4 text-muted-foreground" />
-                            {{ formatDate(flowStats?.lastUpdatedAt) }}
-                        </div>
-                        <p>Контейнеры: {{ flowStats?.withContainer ?? 0 }}</p>
-                    </CardContent>
-                </Card>
             </div>
 
             <div class="grid gap-4 lg:grid-cols-3">

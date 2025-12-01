@@ -36,20 +36,10 @@ const mainNavItems: NavItem[] = [
 ];
 
 const footerNavItems: NavItem[] = [
-    {
-        title: 'Github Repo',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
 ];
 
 const page = usePage();
-const sidebarFlows = computed<FlowSidebarItem[]>(() => (page.props.sidebarFlows as FlowSidebarItem[] | undefined) ?? []);
+const recentFlows = computed<FlowSidebarItem[]>(() => (page.props.recentFlows as FlowSidebarItem[] | undefined) ?? []);
 
 const statusTone = (status?: string | null) => {
     switch (status) {
@@ -82,25 +72,11 @@ const statusTone = (status?: string | null) => {
         <SidebarContent>
             <NavMain :items="mainNavItems" />
 
-            <SidebarGroup v-if="sidebarFlows.length" class="px-2 pt-2">
+            <SidebarGroup v-if="recentFlows.length" class="px-2 pt-2">
                 <SidebarGroupLabel>Последние flow</SidebarGroupLabel>
                 <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton
-                            as-child
-                            size="sm"
-                            :tooltip="'Все flow'"
-                            :is-active="urlIsActive(flowsIndex().url, page.url)"
-                        >
-                            <Link :href="flowsIndex().url" class="flex items-center gap-2">
-                                <Workflow class="size-4" />
-                                <span>Все потоки</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-
                     <SidebarMenuItem
-                        v-for="flow in sidebarFlows"
+                        v-for="flow in recentFlows"
                         :key="flow.id"
                         class="group/sidebar-flow"
                     >
@@ -127,7 +103,10 @@ const statusTone = (status?: string | null) => {
         </SidebarContent>
 
         <SidebarFooter>
-            <NavFooter :items="footerNavItems" />
+            <NavFooter
+                v-if="footerNavItems.length > 0"
+                :items="footerNavItems"
+            />
             <NavUser />
         </SidebarFooter>
     </Sidebar>

@@ -57,7 +57,7 @@ export type AppPageProps<
     quote: { message: string; author: string };
     auth: Auth;
     sidebarOpen: boolean;
-    sidebarFlows?: FlowSidebarItem[];
+    recentFlows?: FlowSidebarItem[];
 };
 
 export interface User {

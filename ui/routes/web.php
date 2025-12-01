@@ -21,6 +21,7 @@ Route::get('dashboard', DashboardController::class)
 
 Route::middleware('auth')->group(function () {
     Route::get('flows', [FlowController::class, 'index'])->name('flows.index')->can('view-any', Flow::class);
+    Route::get('flows/create', [FlowController::class, 'create'])->name('flows.create')->can('create', Flow::class);
     Route::post('flows', [FlowController::class, 'store'])->name('flows.store')->can('create', Flow::class);
     Route::get('flows/{flow}', [FlowController::class, 'show'])->name('flows.show')->can('update', [Flow::class, 'flow']);
     Route::put('flows/{flow}', [FlowController::class, 'update'])->name('flows.update')->can('view-any', [Flow::class, 'flow']);

@@ -21,18 +21,6 @@ final readonly class FlowService
         throw new \RuntimeException('missing realization');
     }
 
-    public function persistCode(Flow $flow): string
-    {
-        $basePath = rtrim(config('flows.storage_path', storage_path('flows')), '/');
-        $targetDir = $basePath.'/'.$flow->slug;
-        $entrypoint = $flow->entrypoint ?: 'main.py';
-
-        File::ensureDirectoryExists($targetDir);
-        File::put($targetDir.'/'.$entrypoint, $flow->code ?? '# your flow goes here');
-
-        return $targetDir;
-    }
-
     public function start(Flow $flow): array
     {
         // TODO: add realization

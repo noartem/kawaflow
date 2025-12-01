@@ -39,7 +39,7 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
-            'sidebarFlows' => fn () => $request->user()
+            'recentFlows' => fn () => $request->user()
                 ? Flow::query()
                     ->select(['id', 'name', 'slug', 'status', 'last_started_at', 'last_finished_at'])
                     ->forUser($request->user())

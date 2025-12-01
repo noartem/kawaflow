@@ -13,13 +13,13 @@ use Inertia\Response;
 class FlowController extends Controller
 {
     private const DEFAULT_CODE = <<<PY
-from kawa import ActorSystem
+from kawa import actor, event, NotSupportedEvent, Context
+from kawa.cron import CronEvent
 
-def main():
-    print("hello from kawaflow")
 
-if __name__ == "__main__":
-    main()
+@actor(receivs=CronEvent.by("0 8 * * *"))
+def MorningActor(ctx: Context, event):
+    print("Good morning!")
 PY;
 
     public function index(Request $request): Response
@@ -67,7 +67,7 @@ PY;
         ]);
     }
 
-    public function store(Request $request, FlowService $flows): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -90,8 +90,6 @@ PY;
             'slug' => $slug,
         ]);
 
-        $flows->persistCode($flow);
-
         return redirect()->route('flows.show', $flow)->with('success', 'Flow создан.');
     }
 
@@ -107,9 +105,7 @@ PY;
             'flow' => $flow,
             'runs' => $runs,
             'logs' => $logs,
-            'status' => $flow->container_id
-                ? $flows->getStatus($flow)
-                : null,
+            'status' => $flow->status,
             'runStats' => $this->runStats($flow),
             'permissions' => [
                 'canRun' => $request->user()->can('run', $flow),
@@ -129,7 +125,6 @@ PY;
         ]);
 
         $flow->update($data);
-        $flows->persistCode($flow);
 
         return redirect()->route('flows.show', $flow)->with('success', 'Flow обновлен.');
     }

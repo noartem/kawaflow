@@ -9,7 +9,6 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Spatie\Permission\PermissionRegistrar;
 
 class LocalDemoSeeder extends Seeder
 {
@@ -18,9 +17,6 @@ class LocalDemoSeeder extends Seeder
         if (! app()->environment(['local', 'dev'])) {
             return;
         }
-
-        $this->callOnce(RolesAndPermissionsSeeder::class);
-        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         if (Flow::query()->exists()) {
             return;
