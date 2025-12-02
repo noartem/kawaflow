@@ -41,19 +41,13 @@ tasks:
     cmds:
       - act
 
-  build:
-    desc: Build all services
-    cmds:
-      - task: kawa:build
-      - task: flow:build
-      - task: flow-manager:build
-
   test:
     desc: Run all tests
     cmds:
       - task: flow:test
       - task: kawa:test
       # - task: flow-manager:test
+      - task: ui:test
 
   lint:
     desc: Run all linting checks
@@ -72,6 +66,7 @@ tasks:
     cmd: docker compose -f compose.yml {{ .CLI_ARGS }}
 
   compose:build:
+    aliases: [build]
     cmds:
       - task: compose
         vars:

@@ -19,7 +19,7 @@ tasks:
     cmds:
       - task: compose
         vars:
-          CLI_ARGS: exec ui-app php artisan test {{.CLI_ARGS}}
+          CLI_ARGS: run --rm ui-app php artisan test {{.CLI_ARGS}}
 
   migrate:
     cmds:
