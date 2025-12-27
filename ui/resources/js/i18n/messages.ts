@@ -1,0 +1,807 @@
+export const messages = {
+    en: {
+        app: {
+            name: 'Kawaflow',
+        },
+        nav: {
+            dashboard: 'Dashboard',
+            flows: 'Flows',
+            new_flow: 'New Flow',
+            platform: 'Platform',
+            recent_flows: 'Recent flows',
+            settings: 'Settings',
+            repository: 'Repository',
+            documentation: 'Documentation',
+            navigation_menu: 'Navigation menu',
+            toggle_sidebar: 'Toggle sidebar',
+            sidebar: 'Sidebar',
+            sidebar_description: 'Displays the mobile sidebar.',
+            welcome: 'Welcome',
+        },
+        actions: {
+            archive: 'Archive',
+            back: 'Back',
+            cancel: 'Cancel',
+            close: 'Close',
+            confirm: 'Confirm',
+            continue: 'Continue',
+            delete: 'Delete',
+            deploy: 'Deploy',
+            open: 'Open',
+            restore: 'Restore',
+            save: 'Save',
+            share: 'Share',
+            start: 'Start',
+            stop: 'Stop',
+        },
+        common: {
+            empty: '—',
+            unknown: 'unknown',
+            logs: 'Logs',
+            started: 'Started',
+            finished: 'Finished',
+            today: 'Today',
+            yesterday: 'Yesterday',
+            loading: 'Loading',
+            more: 'More',
+            breadcrumb: 'Breadcrumb',
+            duration: {
+                hours: '{hours}h {minutes}m',
+                minutes: '{minutes}m {seconds}s',
+                seconds: '{seconds}s',
+            },
+        },
+        locales: {
+            en: 'English',
+            ru: 'Russian',
+        },
+        statuses: {
+            running: 'running',
+            stopped: 'stopped',
+            pending: 'pending',
+            error: 'error',
+            failed: 'failed',
+            locking: 'locking',
+            locked: 'locked',
+            ready: 'ready',
+            success: 'success',
+            lock_failed: 'lock failed',
+            draft: 'draft',
+            unknown: 'unknown',
+        },
+        environments: {
+            production: 'Production',
+            development: 'Development',
+            devShort: 'dev',
+            prodShort: 'prod',
+        },
+        appearance: {
+            light: 'Light',
+            dark: 'Dark',
+            system: 'System',
+        },
+        errors: {
+            generic: 'Something went wrong.',
+        },
+        forms: {
+            name: 'Name',
+            name_placeholder: 'Full name',
+            email: 'Email address',
+            email_placeholder: 'Email address',
+            email_example: 'email@example.com',
+            password: 'Password',
+            password_placeholder: 'Password',
+            current_password: 'Current password',
+            current_password_placeholder: 'Current password',
+            new_password: 'New password',
+            new_password_placeholder: 'New password',
+            confirm_password: 'Confirm password',
+            confirm_password_placeholder: 'Confirm password',
+            saved: 'Saved.',
+        },
+        auth: {
+            logout: 'Log out',
+            login: {
+                title: 'Log in to your account',
+                description: 'Enter your email and password below to log in',
+                short: 'Log in',
+                forgot: 'Forgot password?',
+                remember: 'Remember me',
+                no_account: "Don't have an account?",
+                sign_up: 'Sign up',
+            },
+            register: {
+                title: 'Create an account',
+                description: 'Enter your details below to create your account',
+                short: 'Register',
+                submit: 'Create account',
+                have_account: 'Already have an account?',
+                login: 'Log in',
+            },
+            forgot: {
+                title: 'Forgot password',
+                description: 'Enter your email to receive a password reset link',
+                submit: 'Email password reset link',
+                return: 'Or, return to',
+            },
+            reset: {
+                title: 'Reset password',
+                description: 'Please enter your new password below',
+                submit: 'Reset password',
+            },
+            confirm: {
+                title: 'Confirm your password',
+                description:
+                    'This is a secure area of the application. Please confirm your password before continuing.',
+                short: 'Confirm password',
+                submit: 'Confirm password',
+            },
+            verify: {
+                title: 'Verify email',
+                short: 'Email verification',
+                description:
+                    'Please verify your email address by clicking on the link we just emailed to you.',
+                sent: 'A new verification link has been sent to the email address you provided during registration.',
+                resend: 'Resend verification email',
+            },
+            two_factor: {
+                title: 'Two-factor authentication',
+                placeholder: '○',
+                or: 'or you can',
+                code: {
+                    title: 'Authentication code',
+                    description:
+                        'Enter the authentication code provided by your authenticator application.',
+                    toggle: 'login using a recovery code',
+                },
+                recovery: {
+                    title: 'Recovery code',
+                    description:
+                        'Please confirm access to your account by entering one of your emergency recovery codes.',
+                    toggle: 'login using an authentication code',
+                    input: 'Enter recovery code',
+                },
+            },
+        },
+        settings: {
+            title: 'Settings',
+            description: 'Manage your profile and account settings',
+            profile: {
+                title: 'Profile',
+                heading: 'Profile information',
+                description: 'Update your name and email address',
+                unverified: 'Your email address is unverified.',
+                resend: 'Click here to resend the verification email.',
+                resent: 'A new verification link has been sent to your email address.',
+            },
+            password: {
+                title: 'Password',
+                heading: 'Update password',
+                description:
+                    'Ensure your account is using a long, random password to stay secure',
+                save: 'Save password',
+            },
+            appearance: {
+                title: 'Appearance',
+                description: "Update your account's appearance settings",
+            },
+            language: {
+                title: 'Language',
+                description: 'Choose the interface language',
+            },
+            two_factor: {
+                title: 'Two-Factor Auth',
+                description: 'Manage your two-factor authentication settings',
+                disabled: 'Disabled',
+                enabled: 'Enabled',
+                disabled_help:
+                    'When you enable two-factor authentication, you will be prompted for a secure pin during login. This pin can be retrieved from a TOTP-supported application on your phone.',
+                enabled_help:
+                    'With two-factor authentication enabled, you will be prompted for a secure, random pin during login, which you can retrieve from the TOTP-supported application on your phone.',
+                continue: 'Continue setup',
+                enable: 'Enable 2FA',
+                disable: 'Disable 2FA',
+                modal: {
+                    enabled_title: 'Two-Factor Authentication Enabled',
+                    enabled_description:
+                        'Two-factor authentication is now enabled. Scan the QR code or enter the setup key in your authenticator app.',
+                    enable_title: 'Enable Two-Factor Authentication',
+                    enable_description:
+                        'To finish enabling two-factor authentication, scan the QR code or enter the setup key in your authenticator app.',
+                    verify_title: 'Verify Authentication Code',
+                    verify_description:
+                        'Enter the 6-digit code from your authenticator app',
+                    manual: 'or, enter the code manually',
+                },
+                recovery: {
+                    title: '2FA Recovery Codes',
+                    description:
+                        'Recovery codes let you regain access if you lose your 2FA device. Store them in a secure password manager.',
+                    view: 'View recovery codes',
+                    hide: 'Hide recovery codes',
+                    regenerate: 'Regenerate codes',
+                    note_prefix:
+                        'Each recovery code can be used once to access your account and will be removed after use. If you need more, click ',
+                    note_suffix: ' above.',
+                },
+            },
+            delete_account: {
+                title: 'Delete account',
+                description: 'Delete your account and all of its resources',
+                warning: 'Warning',
+                warning_description:
+                    'Please proceed with caution, this cannot be undone.',
+                action: 'Delete account',
+                modal_title: 'Are you sure you want to delete your account?',
+                modal_description:
+                    'Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.',
+                confirm: 'Delete account',
+            },
+        },
+        dashboard: {
+            title: 'Flow dashboard',
+            headline: {
+                running: 'You have {count} active flows',
+                errors: 'You have {count} flows needing attention',
+                total: 'You have {count} flows',
+            },
+            summary: {
+                total_label: 'Total',
+                updated: 'Last update: {date}',
+                running: 'running',
+                stopped: 'stopped',
+                errors: 'errors',
+            },
+            recent_flows: {
+                title: 'Recent flows',
+                description: 'Fresh changes and status',
+                runs: 'Runs: {count}',
+                updated: 'Updated {date}',
+                empty: 'No flows yet. Create the first one and start it.',
+            },
+            status_breakdown: {
+                title: 'Status breakdown',
+                empty: 'No runs yet to build a distribution.',
+            },
+            runs_feed: {
+                title: 'Run feed',
+                description: 'Latest runs linked to flows',
+                run: 'Run #{id}',
+                started: 'Start: {date}',
+                finished: 'Finish: {date}',
+                created: 'Created {date}',
+                empty: 'No runs yet. Start flows to build history.',
+            },
+            active_deploys: {
+                title: 'Active deployments',
+                description: 'All current deployments',
+                started: 'Started {date}',
+                empty: 'No active deployments right now.',
+            },
+        },
+        flows: {
+            actions: {
+                new: 'New flow',
+                create: 'Create flow',
+                save: 'Save changes',
+                all: 'All flows',
+            },
+            badges: {
+                flow_id: 'Flow #{id}',
+                archived: 'Archived',
+            },
+            breadcrumbs: {
+                flow: 'Flow #{id}',
+            },
+            current_deploy: {
+                title: 'Current deployment',
+                description: 'Status, events, and key metrics',
+                empty: 'No deployment yet. Click Deploy to ship the flow.',
+            },
+            description: {
+                placeholder:
+                    'Add a description so the team knows what this flow does.',
+            },
+            metrics: {
+                actors: 'Actors',
+                events: 'Events',
+                duration: 'Duration',
+            },
+            logs: {
+                empty_current: 'No logs for the current deployment.',
+                empty_dev:
+                    'Logs will appear after the test deployment starts.',
+                empty: 'Message is empty.',
+                node: 'Node: {node}',
+            },
+            summary: {
+                title: 'Summary',
+                description: 'Global statistics for Flow',
+                runs: 'Runs',
+                last_start: 'Last start',
+                last_finish: 'Last finish',
+                empty_runs: 'No runs yet',
+            },
+            history: {
+                title: 'Change history',
+                version: 'Version #{id}',
+                empty_diff: 'diff is empty',
+            },
+            editor: {
+                title: 'Flow editor',
+                description: 'Test run, code, graph, and chat',
+                tabs: {
+                    code: 'Code editor',
+                    chat: 'Chat with code',
+                    hint: 'Write code or chat to update it.',
+                },
+                code_label: 'Code editor',
+                graph_label: 'Graph (JSON)',
+                chat: {
+                    title: 'Chat with code',
+                    subtitle:
+                        'Describe the change and apply it to the flow.',
+                    example_question:
+                        'Last question: “How do I optimize the actor?”',
+                    example_answer:
+                        'Answer: “Try moving IO into a separate step.”',
+                },
+                readonly: {
+                    title: 'Editor unavailable',
+                    description: 'This flow is read-only.',
+                    note_edit:
+                        'To edit code and run test deployments, you need edit permissions.',
+                    note_production:
+                        'The production deployment is shown in the top section.',
+                },
+            },
+            dev_deploy: {
+                title: 'Test deployment',
+                empty: 'No active deployment',
+            },
+            deploy: {
+                label: 'Deploy #{id}',
+            },
+            past_deploys: {
+                title: 'Past deployments',
+                description: 'History of all completed deployments',
+                empty_production: 'No production deployments.',
+                empty_development: 'No test deployments.',
+            },
+            past_chats: {
+                title: 'Past chats',
+                description: 'History of discussions and hints',
+                example_today: 'How do I add a webhook to prod?',
+                example_yesterday: 'Cron schedule optimization',
+            },
+            settings: {
+                title: 'Settings',
+                name: 'Name',
+                name_placeholder: 'e.g., ETL nightly',
+                description: 'Description',
+                description_placeholder:
+                    'What does this flow do? Which services does it touch?',
+                delete_hint:
+                    'Deletion is available only when there are no active deployments.',
+            },
+            index: {
+                title: 'Your flows',
+                total: '{count} total',
+                running: '{count} running',
+                errors: '{count} with errors',
+                drafts: '{count} drafts',
+                description_empty: 'Description not set',
+                runs: 'Runs: {count}',
+                updated: 'Updated: {date}',
+                empty:
+                    'No flows yet. Create the first one, add code, and start it.',
+            },
+            new: 'New flow',
+            untitled: 'Untitled',
+            delete: {
+                confirm: 'Delete flow? This action cannot be undone.',
+                password_prompt: 'Enter your password to confirm deletion:',
+            },
+        },
+    },
+    ru: {
+        app: {
+            name: 'Kawaflow',
+        },
+        nav: {
+            dashboard: 'Дашборд',
+            flows: 'Потоки',
+            new_flow: 'Новый поток',
+            platform: 'Платформа',
+            recent_flows: 'Недавние потоки',
+            settings: 'Настройки',
+            repository: 'Репозиторий',
+            documentation: 'Документация',
+            navigation_menu: 'Меню навигации',
+            toggle_sidebar: 'Переключить сайдбар',
+            sidebar: 'Сайдбар',
+            sidebar_description: 'Показывает мобильный сайдбар.',
+            welcome: 'Добро пожаловать',
+        },
+        actions: {
+            archive: 'Архивировать',
+            back: 'Назад',
+            cancel: 'Отмена',
+            close: 'Закрыть',
+            confirm: 'Подтвердить',
+            continue: 'Продолжить',
+            delete: 'Удалить',
+            deploy: 'Деплой',
+            open: 'Открыть',
+            restore: 'Восстановить',
+            save: 'Сохранить',
+            share: 'Поделиться',
+            start: 'Запустить',
+            stop: 'Остановить',
+        },
+        common: {
+            empty: '—',
+            unknown: 'неизвестно',
+            logs: 'Логи',
+            started: 'Старт',
+            finished: 'Финиш',
+            today: 'Сегодня',
+            yesterday: 'Вчера',
+            loading: 'Загрузка',
+            more: 'Еще',
+            breadcrumb: 'Хлебные крошки',
+            duration: {
+                hours: '{hours}ч {minutes}м',
+                minutes: '{minutes}м {seconds}с',
+                seconds: '{seconds}с',
+            },
+        },
+        locales: {
+            en: 'Английский',
+            ru: 'Русский',
+        },
+        statuses: {
+            running: 'в работе',
+            stopped: 'остановлен',
+            pending: 'в ожидании',
+            error: 'ошибка',
+            failed: 'ошибка',
+            locking: 'блокировка',
+            locked: 'заблокирован',
+            ready: 'готов',
+            success: 'успешно',
+            lock_failed: 'ошибка блокировки',
+            draft: 'черновик',
+            unknown: 'неизвестно',
+        },
+        environments: {
+            production: 'Прод',
+            development: 'Дев',
+            devShort: 'дев',
+            prodShort: 'прод',
+        },
+        appearance: {
+            light: 'Светлая',
+            dark: 'Темная',
+            system: 'Системная',
+        },
+        errors: {
+            generic: 'Что-то пошло не так.',
+        },
+        forms: {
+            name: 'Имя',
+            name_placeholder: 'Полное имя',
+            email: 'Почта',
+            email_placeholder: 'Адрес почты',
+            email_example: 'email@example.com',
+            password: 'Пароль',
+            password_placeholder: 'Пароль',
+            current_password: 'Текущий пароль',
+            current_password_placeholder: 'Текущий пароль',
+            new_password: 'Новый пароль',
+            new_password_placeholder: 'Новый пароль',
+            confirm_password: 'Подтверждение пароля',
+            confirm_password_placeholder: 'Подтвердите пароль',
+            saved: 'Сохранено.',
+        },
+        auth: {
+            logout: 'Выйти',
+            login: {
+                title: 'Войдите в аккаунт',
+                description: 'Введите почту и пароль для входа',
+                short: 'Войти',
+                forgot: 'Забыли пароль?',
+                remember: 'Запомнить меня',
+                no_account: 'Еще нет аккаунта?',
+                sign_up: 'Зарегистрироваться',
+            },
+            register: {
+                title: 'Создайте аккаунт',
+                description: 'Введите данные ниже, чтобы создать аккаунт',
+                short: 'Регистрация',
+                submit: 'Создать аккаунт',
+                have_account: 'Уже есть аккаунт?',
+                login: 'Войти',
+            },
+            forgot: {
+                title: 'Забыли пароль',
+                description: 'Введите почту, чтобы получить ссылку для сброса',
+                submit: 'Отправить ссылку для сброса',
+                return: 'Или вернитесь к',
+            },
+            reset: {
+                title: 'Сброс пароля',
+                description: 'Введите новый пароль ниже',
+                submit: 'Сбросить пароль',
+            },
+            confirm: {
+                title: 'Подтвердите пароль',
+                description:
+                    'Это защищенная область приложения. Пожалуйста, подтвердите пароль перед продолжением.',
+                short: 'Подтверждение пароля',
+                submit: 'Подтвердить пароль',
+            },
+            verify: {
+                title: 'Подтвердите почту',
+                short: 'Подтверждение почты',
+                description:
+                    'Подтвердите адрес почты, перейдя по ссылке, которую мы отправили.',
+                sent: 'Новая ссылка для подтверждения отправлена на вашу почту.',
+                resend: 'Отправить письмо повторно',
+            },
+            two_factor: {
+                title: 'Двухфакторная аутентификация',
+                placeholder: '○',
+                or: 'или вы можете',
+                code: {
+                    title: 'Код аутентификации',
+                    description:
+                        'Введите код из приложения-аутентификатора.',
+                    toggle: 'войти с кодом восстановления',
+                },
+                recovery: {
+                    title: 'Код восстановления',
+                    description:
+                        'Подтвердите доступ, введя один из резервных кодов.',
+                    toggle: 'войти с кодом аутентификации',
+                    input: 'Введите код восстановления',
+                },
+            },
+        },
+        settings: {
+            title: 'Настройки',
+            description: 'Управляйте профилем и настройками аккаунта',
+            profile: {
+                title: 'Профиль',
+                heading: 'Профиль',
+                description: 'Обновите имя и адрес почты',
+                unverified: 'Адрес почты не подтвержден.',
+                resend: 'Нажмите здесь, чтобы отправить письмо повторно.',
+                resent: 'Новая ссылка для подтверждения отправлена на вашу почту.',
+            },
+            password: {
+                title: 'Пароль',
+                heading: 'Обновить пароль',
+                description:
+                    'Используйте длинный и надежный пароль для защиты аккаунта',
+                save: 'Сохранить пароль',
+            },
+            appearance: {
+                title: 'Внешний вид',
+                description: 'Настройте внешний вид аккаунта',
+            },
+            language: {
+                title: 'Язык',
+                description: 'Выберите язык интерфейса',
+            },
+            two_factor: {
+                title: 'Двухфакторная защита',
+                description: 'Управляйте настройками 2FA',
+                disabled: 'Выключено',
+                enabled: 'Включено',
+                disabled_help:
+                    'При включении 2FA на входе потребуется защитный код из приложения-аутентификатора.',
+                enabled_help:
+                    'При включенной 2FA на входе потребуется защитный код из приложения-аутентификатора.',
+                continue: 'Продолжить настройку',
+                enable: 'Включить 2FA',
+                disable: 'Выключить 2FA',
+                modal: {
+                    enabled_title: 'Двухфакторная защита включена',
+                    enabled_description:
+                        '2FA включена. Отсканируйте QR-код или введите ключ вручную.',
+                    enable_title: 'Включение двухфакторной защиты',
+                    enable_description:
+                        'Отсканируйте QR-код или введите ключ вручную, чтобы завершить настройку.',
+                    verify_title: 'Подтверждение кода',
+                    verify_description:
+                        'Введите 6-значный код из приложения-аутентификатора.',
+                    manual: 'или введите код вручную',
+                },
+                recovery: {
+                    title: 'Коды восстановления 2FA',
+                    description:
+                        'Коды восстановления помогут вернуть доступ, если вы потеряете устройство. Храните их в надежном менеджере паролей.',
+                    view: 'Показать коды восстановления',
+                    hide: 'Скрыть коды восстановления',
+                    regenerate: 'Сгенерировать заново',
+                    note_prefix:
+                        'Каждый код можно использовать один раз. Если нужны новые, нажмите ',
+                    note_suffix: ' выше.',
+                },
+            },
+            delete_account: {
+                title: 'Удаление аккаунта',
+                description: 'Удалите аккаунт и все связанные данные',
+                warning: 'Внимание',
+                warning_description:
+                    'Пожалуйста, будьте осторожны — это действие необратимо.',
+                action: 'Удалить аккаунт',
+                modal_title: 'Вы уверены, что хотите удалить аккаунт?',
+                modal_description:
+                    'После удаления аккаунта все данные будут удалены безвозвратно. Введите пароль для подтверждения.',
+                confirm: 'Удалить аккаунт',
+            },
+        },
+        dashboard: {
+            title: 'Панель потоков',
+            headline: {
+                running: 'У вас {count} активных потоков',
+                errors: 'У вас {count} потоков требуют внимания',
+                total: 'У вас {count} потоков',
+            },
+            summary: {
+                total_label: 'Всего',
+                updated: 'Последнее обновление: {date}',
+                running: 'в работе',
+                stopped: 'остановлено',
+                errors: 'с ошибками',
+            },
+            recent_flows: {
+                title: 'Последние изменения',
+                description: 'Свежие изменения и статус',
+                runs: 'Запусков: {count}',
+                updated: 'Обновлено {date}',
+                empty: 'Пока нет потоков. Создайте первый и запустите его.',
+            },
+            status_breakdown: {
+                title: 'Распределение статусов',
+                empty: 'Пока нет запусков, чтобы построить распределение.',
+            },
+            runs_feed: {
+                title: 'Лента запусков',
+                description: 'Последние запуски с привязкой к потоку',
+                run: 'Запуск #{id}',
+                started: 'Старт: {date}',
+                finished: 'Финиш: {date}',
+                created: 'Создано {date}',
+                empty: 'Запусков пока не было. Стартуйте потоки, чтобы собрать историю.',
+            },
+            active_deploys: {
+                title: 'Активные деплои',
+                description: 'Все текущие деплои',
+                started: 'Старт {date}',
+                empty: 'Сейчас нет активных деплоев.',
+            },
+        },
+        flows: {
+            actions: {
+                new: 'Новый поток',
+                create: 'Создать поток',
+                save: 'Сохранить изменения',
+                all: 'Все потоки',
+            },
+            badges: {
+                flow_id: 'Поток #{id}',
+                archived: 'Архив',
+            },
+            breadcrumbs: {
+                flow: 'Поток #{id}',
+            },
+            current_deploy: {
+                title: 'Текущий деплой',
+                description: 'Статус, события и ключевые метрики',
+                empty: 'Нет деплоя. Нажмите Деплой, чтобы выкатить поток.',
+            },
+            description: {
+                placeholder:
+                    'Добавьте описание, чтобы команда понимала, что делает этот поток.',
+            },
+            metrics: {
+                actors: 'Акторы',
+                events: 'События',
+                duration: 'Длительность',
+            },
+            logs: {
+                empty_current: 'Нет логов для текущего деплоя.',
+                empty_dev: 'Логи появятся после старта тестового деплоя.',
+                empty: 'Сообщение пустое.',
+                node: 'Нода: {node}',
+            },
+            summary: {
+                title: 'Сводка',
+                description: 'Глобальная статистика по Потоку',
+                runs: 'Запусков',
+                last_start: 'Последний старт',
+                last_finish: 'Последний финиш',
+                empty_runs: 'Пока нет запусков',
+            },
+            history: {
+                title: 'История изменений',
+                version: 'Версия #{id}',
+                empty_diff: 'diff пустой',
+            },
+            editor: {
+                title: 'Редактор Потока',
+                description: 'Тестовый запуск, код, граф и чат',
+                tabs: {
+                    code: 'Редактор кода',
+                    chat: 'Чат с кодом',
+                    hint: 'Пишите код или общайтесь с чатом, который его изменит.',
+                },
+                code_label: 'Редактор кода',
+                graph_label: 'Граф (JSON)',
+                chat: {
+                    title: 'Чат с кодом',
+                    subtitle: 'Опишите изменение и примените его к потоку.',
+                    example_question: 'Последний вопрос: «Как оптимизировать актор?»',
+                    example_answer: 'Ответ: «Попробуйте вынести IO в отдельный шаг»',
+                },
+                readonly: {
+                    title: 'Редактор недоступен',
+                    description: 'Этот поток доступен только для просмотра',
+                    note_edit:
+                        'Чтобы менять код и запускать тестовый деплой, нужны права на редактирование.',
+                    note_production:
+                        'Прод-деплой отображается в верхнем блоке.',
+                },
+            },
+            dev_deploy: {
+                title: 'Тестовый деплой',
+                empty: 'Нет активного деплоя',
+            },
+            deploy: {
+                label: 'Деплой #{id}',
+            },
+            past_deploys: {
+                title: 'Прошлые деплои',
+                description: 'История всех завершенных деплоев',
+                empty_production: 'Нет прод-деплоев.',
+                empty_development: 'Нет тестовых деплоев.',
+            },
+            past_chats: {
+                title: 'Прошлые чаты',
+                description: 'История обсуждений и подсказок',
+                example_today: 'Как добавить webhook в прод?',
+                example_yesterday: 'Оптимизация cron расписаний',
+            },
+            settings: {
+                title: 'Настройки',
+                name: 'Название',
+                name_placeholder: 'Например, ETL nightly',
+                description: 'Описание',
+                description_placeholder:
+                    'Что делает поток? Какие сервисы затрагивает?',
+                delete_hint:
+                    'Удаление доступно только при отсутствии активных деплоев.',
+            },
+            index: {
+                title: 'Ваши потоки',
+                total: '{count} всего',
+                running: '{count} в работе',
+                errors: '{count} с ошибками',
+                drafts: '{count} черновиков',
+                description_empty: 'Описание не заполнено',
+                runs: 'Запусков: {count}',
+                updated: 'Обновлён: {date}',
+                empty: 'Пока нет потоков. Создайте первый, добавьте код и запустите его.',
+            },
+            new: 'Новый поток',
+            untitled: 'Без названия',
+            delete: {
+                confirm: 'Удалить поток? Действие необратимо.',
+                password_prompt: 'Введите пароль для подтверждения удаления:',
+            },
+        },
+    },
+};

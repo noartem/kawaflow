@@ -26,12 +26,14 @@ class Flow extends Model
         'image',
         'last_started_at',
         'last_finished_at',
+        'archived_at',
     ];
 
     protected $casts = [
         'graph' => 'array',
         'last_started_at' => 'datetime',
         'last_finished_at' => 'datetime',
+        'archived_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -56,6 +58,30 @@ class Flow extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(FlowLog::class);
+    }
+
+    public function histories(): HasMany
+    {
+        return $this->hasMany(FlowHistory::class);
+    }
+
+    public function activeRun(string $type): ?FlowRun
+    {
+        return $this->runs()
+            ->where('type', $type)
+            ->where('active', true)
+            ->latest()
+            ->first();
+    }
+
+    public function hasActiveDeploys(): bool
+    {
+        return $this->runs()->where('active', true)->exists();
+    }
+
+    public function hadProductionDeploy(): bool
+    {
+        return $this->runs()->where('type', 'production')->exists();
     }
 
     public function scopeForUser(Builder $query, User $user): void {

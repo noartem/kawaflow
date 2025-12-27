@@ -24,13 +24,17 @@ export interface FlowSidebarItem {
     status?: string | null;
     last_started_at?: string | null;
     last_finished_at?: string | null;
+    archived_at?: string | null;
 }
 
 export interface FlowRunSummary {
     id: number;
+    type: 'development' | 'production';
+    active: boolean;
     status?: string | null;
     started_at?: string | null;
     finished_at?: string | null;
+    lock?: string | null;
     created_at: string;
     flow: {
         id: number;
@@ -56,6 +60,8 @@ export type AppPageProps<
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
+    locale: string;
+    locales: string[];
     sidebarOpen: boolean;
     recentFlows?: FlowSidebarItem[];
 };
@@ -64,6 +70,7 @@ export interface User {
     id: number;
     name: string;
     email: string;
+    locale?: string | null;
     avatar?: string;
     email_verified_at: string | null;
     created_at: string;

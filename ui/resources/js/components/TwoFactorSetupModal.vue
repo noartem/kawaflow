@@ -21,6 +21,7 @@ import { Form } from '@inertiajs/vue3';
 import { useClipboard } from '@vueuse/core';
 import { Check, Copy, ScanLine } from 'lucide-vue-next';
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 interface Props {
     requiresConfirmation: boolean;
@@ -33,6 +34,7 @@ const isOpen = defineModel<boolean>('isOpen');
 const { copy, copied } = useClipboard();
 const { qrCodeSvg, manualSetupKey, clearSetupData, fetchSetupData, errors } =
     useTwoFactorAuth();
+const { t } = useI18n();
 
 const showVerificationStep = ref(false);
 const code = ref<number[]>([]);
@@ -47,26 +49,24 @@ const modalConfig = computed<{
 }>(() => {
     if (props.twoFactorEnabled) {
         return {
-            title: 'Two-Factor Authentication Enabled',
-            description:
-                'Two-factor authentication is now enabled. Scan the QR code or enter the setup key in your authenticator app.',
-            buttonText: 'Close',
+            title: t('settings.two_factor.modal.enabled_title'),
+            description: t('settings.two_factor.modal.enabled_description'),
+            buttonText: t('actions.close'),
         };
     }
 
     if (showVerificationStep.value) {
         return {
-            title: 'Verify Authentication Code',
-            description: 'Enter the 6-digit code from your authenticator app',
-            buttonText: 'Continue',
+            title: t('settings.two_factor.modal.verify_title'),
+            description: t('settings.two_factor.modal.verify_description'),
+            buttonText: t('actions.continue'),
         };
     }
 
     return {
-        title: 'Enable Two-Factor Authentication',
-        description:
-            'To finish enabling two-factor authentication, scan the QR code or enter the setup key in your authenticator app',
-        buttonText: 'Continue',
+        title: t('settings.two_factor.modal.enable_title'),
+        description: t('settings.two_factor.modal.enable_description'),
+        buttonText: t('actions.continue'),
     };
 });
 
@@ -190,9 +190,7 @@ watch(
                             <div
                                 class="absolute inset-0 top-1/2 h-px w-full bg-border"
                             />
-                            <span class="relative bg-card px-2 py-1"
-                                >or, enter the code manually</span
-                            >
+                            <span class="relative bg-card px-2 py-1">{{ t('settings.two_factor.modal.manual') }}</span>
                         </div>
 
                         <div
@@ -248,7 +246,7 @@ watch(
                             >
                                 <PinInput
                                     id="otp"
-                                    placeholder="○"
+                                    :placeholder="t('auth.two_factor.placeholder')"
                                     v-model="code"
                                     type="number"
                                     otp
@@ -279,7 +277,7 @@ watch(
                                     @click="showVerificationStep = false"
                                     :disabled="processing"
                                 >
-                                    Back
+                                    {{ t('actions.back') }}
                                 </Button>
                                 <Button
                                     type="submit"
@@ -288,7 +286,7 @@ watch(
                                         processing || codeValue.length < 6
                                     "
                                 >
-                                    Confirm
+                                    {{ t('actions.confirm') }}
                                 </Button>
                             </div>
                         </div>

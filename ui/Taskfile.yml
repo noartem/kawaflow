@@ -6,11 +6,16 @@ tasks:
     dir: ../
     cmd: docker compose -f compose.yml {{ .CLI_ARGS }}
 
+  exec:
+    internal: true
+    dir: ../
+    cmd: docker compose -f compose.yml exec -w /var/www/html ui-app {{ .CLI_ARGS }}
+
   copy-vendor:
     cmds:
-#      - task: compose
-#        vars:
-#          CLI_ARGS: cp ui-app:/var/www/html/vendor ./ui/vendor
+      - task: compose
+        vars:
+          CLI_ARGS: cp ui-app:/var/www/html/vendor ./ui/vendor
       - task: compose
         vars:
           CLI_ARGS: cp ui-app:/var/www/html/node_modules ./ui/node_modules
@@ -23,44 +28,50 @@ tasks:
 
   migrate:
     cmds:
-      - task: compose
+      - task: exec
         vars:
-          CLI_ARGS: exec ui-app php artisan migrate {{.CLI_ARGS}}
+          CLI_ARGS: php artisan migrate {{.CLI_ARGS}}
 
   sh:
     cmds:
-      - task: compose
+      - task: exec
         vars:
-          CLI_ARGS: exec ui-app bash
+          CLI_ARGS: bash
 
   sh-execute:
     aliases: [ shc ]
     cmds:
-      - task: compose
+      - task: exec
         vars:
-          CLI_ARGS: exec ui-app bash -c "{{.CLI_ARGS}}"
+          CLI_ARGS: bash -c "{{.CLI_ARGS}}"
 
   tinker:
     aliases: [ ti ]
     cmds:
-      - task: compose
+      - task: exec
         vars:
-          CLI_ARGS: exec ui-app php artisan tinker
+          CLI_ARGS: php artisan tinker
 
   db:reset:
     cmds:
-      - task: compose
+      - task: exec
         vars:
-          CLI_ARGS: exec ui-app php artisan migrate:fresh --seed {{.CLI_ARGS}}
+          CLI_ARGS: php artisan migrate:fresh {{.CLI_ARGS}}
 
   db:local-seed:
     cmds:
-      - task: compose
+      - task: exec
         vars:
-          CLI_ARGS: exec ui-app php artisan db:seed --class="Database\\Seeders\\LocalDemoSeeder" {{.CLI_ARGS}}
+          CLI_ARGS: php artisan db:seed --class="Database\\Seeders\\DatabaseSeeder" {{.CLI_ARGS}}
+
+  db:demo-seed:
+    cmds:
+      - task: exec
+        vars:
+          CLI_ARGS: php artisan db:seed --class="Database\\Seeders\\LocalDemoSeeder" {{.CLI_ARGS}}
 
   schedule:run:
     cmds:
-      - task: compose
+      - task: exec
         vars:
-          CLI_ARGS: exec ui-app php artisan schedule:run {{.CLI_ARGS}}
+          CLI_ARGS: php artisan schedule:run {{.CLI_ARGS}}

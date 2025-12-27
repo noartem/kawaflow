@@ -9,8 +9,10 @@ and cleanup with Unix socket integration.
 import asyncio
 import os
 import shutil
+import tempfile
 from datetime import datetime
 from typing import Dict, List, Optional, Callable, Any
+from uuid import uuid4
 
 import docker
 from docker.errors import APIError, ImageNotFound, NotFound
@@ -483,6 +485,61 @@ class ContainerManager:
                 raise
             else:
                 raise APIError(f"Container update failed: {str(e)}")
+
+    async def generate_uv_lock(self, image: str, code: str) -> str:
+        """
+        Build a temporary image with main.py and generate uv.lock.
+
+        Args:
+            image: Base Docker image
+            code: Python code for main.py
+
+        Returns:
+            str: uv.lock file contents
+        """
+        tag = f"kawaflow-lock:{uuid4().hex}"
+
+        try:
+            self.logger.debug("Generating uv lock", {"image": image, "tag": tag})
+
+            with tempfile.TemporaryDirectory() as temp_dir:
+                main_path = os.path.join(temp_dir, "main.py")
+                with open(main_path, "w", encoding="utf-8") as handle:
+                    handle.write(code)
+
+                dockerfile_path = os.path.join(temp_dir, "Dockerfile")
+                with open(dockerfile_path, "w", encoding="utf-8") as handle:
+                    handle.write(
+                        "\n".join(
+                            [
+                                f"FROM {image}",
+                                "WORKDIR /app",
+                                "COPY main.py /app/main.py",
+                                "RUN uv lock --script /app/main.py",
+                            ]
+                        )
+                    )
+
+                image_obj, _ = self.docker_client.images.build(
+                    path=temp_dir, tag=tag, rm=True, forcerm=True
+                )
+                output = self.docker_client.containers.run(
+                    image_obj.id, command=["cat", "/app/uv.lock"], remove=True
+                )
+                lock_content = (
+                    output.decode("utf-8") if isinstance(output, (bytes, bytearray)) else str(output)
+                )
+
+                return lock_content
+        except Exception as exc:
+            self.logger.error(exc, {"operation": "generate_uv_lock", "image": image})
+            raise
+        finally:
+            try:
+                self.docker_client.images.remove(image=tag, force=True)
+            except Exception:
+                # Best-effort cleanup
+                pass
 
     async def delete_container(self, container_id: str) -> None:
         """

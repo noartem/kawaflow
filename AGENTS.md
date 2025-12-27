@@ -22,10 +22,6 @@
 - UI uses phpunit in `ui/tests`; run via `task ui:test` and filter with `--filter` when needed.
 - Add tests for every feature/bugfix; keep them independent and cover success + error paths. Use standard pytest options through Task (`-k`, `-v`, specific node ids).
 
-## Commit & Pull Request Guidelines
-- Commit style matches history: Conventional Commit verbs with scopes when relevant (`feat:`, `refactor(kawa):`, `feat(dev):`). Reference services in scopes (`flow-manager`, `flow`, `kawa`, `ui`, `docs`).
-- PRs: clear description, linked issues, impacted services, and required proofs (lint/test outputs: `task lint`, `task test`). Attach screenshots for docs/UI changes when relevant; avoid bundling unrelated changes.
-
 ## Security & Operations
 - Never run Python tooling directly on host; use Task + Docker to ensure UV-managed, reproducible environments. Run UI tooling through the compose-based tasks (artisan/composer via `task ui:*`) instead of host binaries. Keep secrets in `.env` and inject via tasks/containers; avoid shelling out with unsanitized inputs in FastAPI handlers.
 - Containers expose WebSocket API on :8000 and Unix socket communication for flow; keep generated artifacts within service directories to prevent root pollution.

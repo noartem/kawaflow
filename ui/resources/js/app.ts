@@ -5,6 +5,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { initializeTheme } from './composables/useAppearance';
+import { createI18nInstance } from './i18n';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -16,8 +17,12 @@ createInertiaApp({
             import.meta.glob<DefineComponent>('./pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
+        const locale = props.initialPage.props.locale as string | undefined;
+        const i18n = createI18nInstance(locale);
+
         createApp({ render: () => h(App, props) })
             .use(plugin)
+            .use(i18n)
             .mount(el);
     },
     progress: {

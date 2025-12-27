@@ -27,12 +27,17 @@ class FlowRunFactory extends Factory
 
         return [
             'flow_id' => Flow::factory(),
+            'type' => fake()->randomElement(['development', 'production']),
+            'active' => fake()->boolean(30),
             'status' => $status,
             'container_id' => fake()->optional()->bothify('container-??##'),
+            'lock' => fake()->optional(0.4)->text(200),
             'meta' => [
                 'trace_id' => Str::uuid()->toString(),
                 'duration_ms' => $finishedAt && $startedAt ? $finishedAt->getTimestamp() - $startedAt->getTimestamp() : null,
             ],
+            'actors' => fake()->optional(0.5)->randomElements(['EmailActor', 'WebhookActor', 'Scheduler'], fake()->numberBetween(1, 2)),
+            'events' => fake()->optional(0.5)->randomElements(['cron', 'webhook', 'email'], fake()->numberBetween(1, 2)),
             'started_at' => $startedAt,
             'finished_at' => $finishedAt,
         ];

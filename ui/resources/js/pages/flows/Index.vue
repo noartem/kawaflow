@@ -1,13 +1,14 @@
 <script setup lang="ts">
     import {Badge} from '@/components/ui/badge';
     import {Button} from '@/components/ui/button';
-    import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
+    import {Card, CardContent} from '@/components/ui/card';
     import AppLayout from '@/layouts/AppLayout.vue';
     import {create as flowCreate, index as flowsIndex, show as flowShow} from '@/routes/flows';
     import type {BreadcrumbItem, FlowSidebarItem} from '@/types';
     import {Head, Link} from '@inertiajs/vue3';
     import {computed} from 'vue';
     import {Activity, Clock3, FileCode, Plus, Workflow} from 'lucide-vue-next';
+    import {useI18n} from 'vue-i18n';
 
     interface Flow extends FlowSidebarItem {
         description?: string | null;
@@ -20,12 +21,14 @@
         flows: Array<Flow>;
     }>();
 
-    const breadcrumbs: BreadcrumbItem[] = [
+    const {t} = useI18n();
+
+    const breadcrumbs = computed<BreadcrumbItem[]>(() => [
         {
-            title: 'Flows',
+            title: t('nav.flows'),
             href: flowsIndex().url,
         },
-    ];
+    ]);
 
     const metrics = computed(() => {
         const total = props.flows.length;
@@ -51,15 +54,17 @@
     };
 
     const formatDate = (value?: string | null) => {
-        if (!value) return '—';
+        if (!value) return t('common.empty');
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return value;
         return date.toLocaleString();
     };
+
+    const statusLabel = (status?: string | null) => t(`statuses.${status ?? 'draft'}`);
 </script>
 
 <template>
-    <Head title="Flows"/>
+    <Head :title="t('nav.flows')"/>
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6 px-4 pb-12 pt-2">
@@ -71,25 +76,21 @@
 
                 <div class="relative flex flex-col gap-8 lg:flex-row lg:items-center">
                     <div class="space-y-1">
-                        <h1 class="text-3xl font-semibold leading-tight">Ваши потоки</h1>
+                        <h1 class="text-3xl font-semibold leading-tight">{{ t('flows.index.title') }}</h1>
                         <div class="flex flex-wrap gap-3 pt-2">
-                            <Badge variant="outline" class="bg-primary/10 text-primary">{{ metrics.total }} всего
-                            </Badge>
+                            <Badge variant="outline" class="bg-primary/10 text-primary">{{ t('flows.index.total', { count: metrics.total }) }}</Badge>
                             <Badge
 
                                 v-if="metrics.running > 0"
-                                variant="outline" class="bg-emerald-500/10 text-emerald-300">{{ metrics.running }} в
-                                работе
+                                variant="outline" class="bg-emerald-500/10 text-emerald-300">{{ t('flows.index.running', { count: metrics.running }) }}
                             </Badge>
                             <Badge
                                 v-if="metrics.failing > 0"
-                                variant="outline" class="bg-rose-500/10 text-rose-300">{{ metrics.failing }} с
-                                ошибками
+                                variant="outline" class="bg-rose-500/10 text-rose-300">{{ t('flows.index.errors', { count: metrics.failing }) }}
                             </Badge>
                             <Badge
                                 v-if="metrics.drafts > 0"
-                                variant="outline" class="bg-muted/60 text-muted-foreground">{{ metrics.drafts }}
-                                черновиков
+                                variant="outline" class="bg-muted/60 text-muted-foreground">{{ t('flows.index.drafts', { count: metrics.drafts }) }}
                             </Badge>
                         </div>
                     </div>
@@ -100,7 +101,7 @@
                         <Button as-child>
                             <Link :href="flowCreate().url">
                                 <Plus class="size-4"/>
-                                Создать flow
+                                {{ t('flows.actions.create') }}
                             </Link>
                         </Button>
                     </div>
@@ -123,33 +124,31 @@
                                     <Workflow class="size-4 text-muted-foreground"/>
                                     {{ flow.name }}
                                 </Link>
-                                <p class="text-sm text-muted-foreground">{{
-                                        flow.description || 'Описание не заполнено'
-                                    }}</p>
+                                <p class="text-sm text-muted-foreground">{{ flow.description || t('flows.index.description_empty') }}</p>
                                 <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                                     <span class="inline-flex items-center gap-1">
-                                        <Activity class="size-3"/> Запусков: {{ flow.runs_count ?? 0 }}
+                                        <Activity class="size-3"/> {{ t('flows.index.runs', { count: flow.runs_count ?? 0 }) }}
                                     </span>
                                     <span class="inline-flex items-center gap-1">
-                                        <Clock3 class="size-3"/> Обновлён: {{ formatDate(flow.updated_at) }}
+                                        <Clock3 class="size-3"/> {{ t('flows.index.updated', { date: formatDate(flow.updated_at) }) }}
                                     </span>
                                 </div>
                             </div>
                             <div class="flex items-center gap-3 self-start md:self-center">
                                 <Badge :class="statusTone(flow.status)" variant="outline">
-                                    {{ flow.status ?? 'draft' }}
+                                    {{ statusLabel(flow.status) }}
                                 </Badge>
                                 <Button as-child variant="outline" size="sm">
                                     <Link :href="flowShow({ flow: flow.id }).url">
                                         <FileCode class="size-4"/>
-                                        Открыть
+                                        {{ t('actions.open') }}
                                     </Link>
                                 </Button>
                             </div>
                         </div>
                     </div>
                     <div v-else class="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
-                        Пока нет потоков. Создайте первый, добавьте код и запустите его.
+                        {{ t('flows.index.empty') }}
                     </div>
                 </CardContent>
             </Card>

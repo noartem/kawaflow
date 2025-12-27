@@ -73,6 +73,8 @@
       <excludeFolder url="file://$MODULE_DIR$/ui/vendor/vendor/vlucas" />
       <excludeFolder url="file://$MODULE_DIR$/ui/vendor/vendor/voku" />
       <excludeFolder url="file://$MODULE_DIR$/ui/vendor/vendor/webmozart" />
+      <excludeFolder url="file://$MODULE_DIR$/ui/storage/app" />
+      <excludeFolder url="file://$MODULE_DIR$/ui/storage/framework" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.11" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -74,6 +74,11 @@ class FlowManagerClient
         return $this->run('list_containers');
     }
 
+    public function generateLock(array $payload): array
+    {
+        return $this->run('generate_lock', $payload);
+    }
+
     protected function run(string $action, array $payload = []): array
     {
         try {

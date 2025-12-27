@@ -25,6 +25,7 @@ class LocalDemoSeeder extends Seeder
         $admin = User::factory()->admin()->create([
             'name' => 'Demo Admin',
             'email' => 'demo.admin@kawaflow.localhost',
+            'password' => '12345678',
         ]);
 
         $members = User::factory()
@@ -50,14 +51,25 @@ class LocalDemoSeeder extends Seeder
                 ->count(fake()->numberBetween(1, 5))
                 ->create();
 
+            $runs
+                ->groupBy('type')
+                ->each(static function (Collection $group) {
+                    $active = $group->first();
+                    if ($active) {
+                        $active->update(['active' => true]);
+                    }
+                    $group->skip(1)->each->update(['active' => false]);
+                });
+
             foreach ($runs as $run) {
                 FlowLog::factory()->forRun($run)->count(fake()->numberBetween(3, 8))->create();
             }
 
             FlowLog::factory()->forFlow($flow)->count(fake()->numberBetween(2, 4))->create();
 
+            $productionRun = $runs->firstWhere('type', 'production');
             $flow->update([
-                'status' => $this->flowStatus($runs),
+                'status' => $productionRun ? $productionRun->status : $this->flowStatus($runs),
                 'last_started_at' => $runs->max('started_at'),
                 'last_finished_at' => $runs->max('finished_at'),
                 'container_id' => $flow->container_id ?? 'flow-'.Str::lower(Str::random(8)),

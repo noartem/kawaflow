@@ -8,8 +8,9 @@ import { dashboard } from '@/routes';
 import { index as flowsIndex, show as flowShow } from '@/routes/flows';
 import { type BreadcrumbItem, type FlowRunSummary, type FlowSidebarItem, type FlowStatsSummary } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { Activity, ArrowUpRight, Clock3, Plus, Workflow } from 'lucide-vue-next';
+import { Activity, ArrowUpRight, Plus, Workflow } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 interface FlowOverview extends FlowSidebarItem {
     runs_count?: number;
@@ -20,14 +21,17 @@ const props = defineProps<{
     flowStats: FlowStatsSummary;
     recentFlows: FlowOverview[];
     recentRuns: FlowRunSummary[];
+    activeDeploys: FlowRunSummary[];
 }>();
 
-const breadcrumbs: BreadcrumbItem[] = [
+const { t } = useI18n();
+
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
-        title: 'Dashboard',
+        title: t('nav.dashboard'),
         href: dashboard().url,
     },
-];
+]);
 
 const statusTone = (status?: string | null) => {
     switch (status) {
@@ -43,7 +47,7 @@ const statusTone = (status?: string | null) => {
 };
 
 const formatDate = (value?: string | null) => {
-    if (!value) return '—';
+    if (!value) return t('common.empty');
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
     return date.toLocaleString();
@@ -53,30 +57,24 @@ const headline = computed(() => {
     const running = props.flowStats?.running ?? 0;
     const total = props.flowStats?.total ?? 0;
     const errors = props.flowStats?.errors ?? 0;
-    const highlight = running > 0
-        ? `${running} активных`
-        : errors > 0
-            ? `${errors} требует внимания`
-            : `${total} всего`;
-
-    return `У вас ${highlight} потоков`;
+    if (running > 0) {
+        return t('dashboard.headline.running', { count: running });
+    }
+    if (errors > 0) {
+        return t('dashboard.headline.errors', { count: errors });
+    }
+    return t('dashboard.headline.total', { count: total });
 });
 
 const totalRuns = computed(() => props.flowStats?.runsByStatus?.reduce((sum, row) => sum + (row.total ?? 0), 0) ?? 0);
-const activePercent = computed(() => {
-    const total = props.flowStats?.total ?? 0;
-    const running = props.flowStats?.running ?? 0;
-    return total > 0 ? Math.round((running / total) * 100) : 0;
-});
-const failingPercent = computed(() => {
-    const total = props.flowStats?.total ?? 0;
-    const errors = props.flowStats?.errors ?? 0;
-    return total > 0 ? Math.round((errors / total) * 100) : 0;
-});
+
+const statusLabel = (status?: string | null) => t(`statuses.${status ?? 'unknown'}`);
+const runTypeLabel = (type?: FlowRunSummary['type'] | null) =>
+    type === 'production' ? t('environments.production') : t('environments.development');
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head :title="t('nav.dashboard')" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6 px-4 pb-10 pt-2">
@@ -86,18 +84,19 @@ const failingPercent = computed(() => {
                 <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,theme(colors.primary/10),transparent_35%)]" />
                 <div class="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div class="space-y-3">
-                        <h1 class="text-3xl font-semibold leading-tight">Панель потоков</h1>
+                        <h1 class="text-3xl font-semibold leading-tight">{{ t('dashboard.title') }}</h1>
+                        <p class="text-sm text-muted-foreground">{{ headline }}</p>
                         <div class="flex flex-wrap gap-3 pt-2">
                             <Button as-child>
                                 <Link :href="flowsIndex().url">
                                     <Plus class="size-4" />
-                                    Новый поток
+                                    {{ t('flows.actions.new') }}
                                 </Link>
                             </Button>
                             <Button variant="outline" as-child>
                                 <Link :href="flowsIndex().url">
                                     <Workflow class="size-4" />
-                                    Все потоки
+                                    {{ t('flows.actions.all') }}
                                 </Link>
                             </Button>
                         </div>
@@ -105,35 +104,35 @@ const failingPercent = computed(() => {
 
                     <div class="flex flex-col gap-3 rounded-xl border border-border/60 bg-background/70 p-4 text-sm backdrop-blur">
                         <div class="flex items-center gap-3">
-                            <div class="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Всего</div>
+                            <div class="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{{ t('dashboard.summary.total_label') }}</div>
                             <div class="text-3xl font-semibold">{{ flowStats?.total ?? 0 }}</div>
                         </div>
                         <div class="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
                             <div class="flex items-center gap-2">
                                 <span class="h-2 w-2 rounded-full bg-emerald-400/70" />
-                                {{ flowStats?.running ?? 0 }} running
+                                {{ flowStats?.running ?? 0 }} {{ t('dashboard.summary.running') }}
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="h-2 w-2 rounded-full bg-amber-400/70" />
-                                {{ flowStats?.stopped ?? 0 }} stopped
+                                {{ flowStats?.stopped ?? 0 }} {{ t('dashboard.summary.stopped') }}
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="h-2 w-2 rounded-full bg-rose-400/70" />
-                                {{ flowStats?.errors ?? 0 }} errors
+                                {{ flowStats?.errors ?? 0 }} {{ t('dashboard.summary.errors') }}
                             </div>
                         </div>
                         <p class="text-[11px] text-muted-foreground">
-                            Последнее обновление: {{ formatDate(flowStats?.lastUpdatedAt) }}
+                            {{ t('dashboard.summary.updated', { date: formatDate(flowStats?.lastUpdatedAt) }) }}
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div class="grid gap-4 lg:grid-cols-3">
+            <div class="grid items-start gap-4 lg:grid-cols-3">
                 <Card class="lg:col-span-2">
                     <CardHeader class="pb-3">
-                        <CardTitle>Последние потоки</CardTitle>
-                        <CardDescription>Свежие изменения и статус</CardDescription>
+                        <CardTitle>{{ t('dashboard.recent_flows.title') }}</CardTitle>
+                        <CardDescription>{{ t('dashboard.recent_flows.description') }}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div v-if="recentFlows?.length" class="divide-y divide-border">
@@ -152,32 +151,32 @@ const failingPercent = computed(() => {
                                         <ArrowUpRight class="size-4" />
                                     </Link>
                                     <p class="text-sm text-muted-foreground">
-                                        Запусков: {{ flow.runs_count ?? 0 }} • Обновлено {{ formatDate(flow.updated_at) }}
+                                        {{ t('dashboard.recent_flows.runs', { count: flow.runs_count ?? 0 }) }} •
+                                        {{ t('dashboard.recent_flows.updated', { date: formatDate(flow.updated_at) }) }}
                                     </p>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <Badge :class="statusTone(flow.status)" variant="outline">
-                                        {{ flow.status ?? 'draft' }}
+                                        {{ statusLabel(flow.status) }}
                                     </Badge>
                                     <Link
                                         :href="flowShow({ flow: flow.id }).url"
                                         class="text-xs font-semibold text-primary hover:underline"
                                     >
-                                        Открыть
+                                        {{ t('actions.open') }}
                                     </Link>
                                 </div>
                             </div>
                         </div>
                         <div v-else class="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
-                            Пока нет потоков для отображения. Создайте первый и запустите его.
+                            {{ t('dashboard.recent_flows.empty') }}
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card class="self-start">
                     <CardHeader class="pb-3">
-                        <CardTitle>Распределение статусов</CardTitle>
-                        <CardDescription>Быстрый срез по FlowRun</CardDescription>
+                        <CardTitle>{{ t('dashboard.status_breakdown.title') }}</CardTitle>
                     </CardHeader>
                     <CardContent class="space-y-3">
                         <div
@@ -192,7 +191,7 @@ const failingPercent = computed(() => {
                                 <div class="flex items-center justify-between text-sm">
                                     <div class="flex items-center gap-2">
                                         <span class="h-2 w-2 rounded-full bg-primary" />
-                                        <span class="capitalize text-muted-foreground">{{ row.status ?? 'unknown' }}</span>
+                                        <span class="capitalize text-muted-foreground">{{ statusLabel(row.status) }}</span>
                                     </div>
                                     <span class="font-semibold">{{ row.total }}</span>
                                 </div>
@@ -205,17 +204,17 @@ const failingPercent = computed(() => {
                             </div>
                         </div>
                         <div v-else class="text-sm text-muted-foreground">
-                            Пока нет запусков, чтобы построить распределение.
+                            {{ t('dashboard.status_breakdown.empty') }}
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            <div class="grid gap-4 lg:grid-cols-3">
+            <div class="grid items-start gap-4 lg:grid-cols-3">
                 <Card class="lg:col-span-2">
                     <CardHeader class="pb-3">
-                        <CardTitle>Лента запусков</CardTitle>
-                        <CardDescription>Последние FlowRun с привязкой к потоку</CardDescription>
+                        <CardTitle>{{ t('dashboard.runs_feed.title') }}</CardTitle>
+                        <CardDescription>{{ t('dashboard.runs_feed.description') }}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div v-if="recentRuns?.length" class="divide-y divide-border">
@@ -227,8 +226,8 @@ const failingPercent = computed(() => {
                                 <div class="space-y-1">
                                     <div class="flex items-center gap-2">
                                         <Activity class="size-4 text-muted-foreground" />
-                                        <span class="text-sm font-semibold">Run #{{ run.id }}</span>
-                                        <Badge :class="statusTone(run.status)" variant="outline">{{ run.status ?? '—' }}</Badge>
+                                        <span class="text-sm font-semibold">{{ t('dashboard.runs_feed.run', { id: run.id }) }}</span>
+                                        <Badge :class="statusTone(run.status)" variant="outline">{{ statusLabel(run.status) }}</Badge>
                                     </div>
                                     <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                                         <Link
@@ -239,42 +238,57 @@ const failingPercent = computed(() => {
                                             <ArrowUpRight class="size-3" />
                                         </Link>
                                         <Separator orientation="vertical" class="h-4" />
-                                        <span>Старт: {{ formatDate(run.started_at) }}</span>
+                                        <span>{{ t('dashboard.runs_feed.started', { date: formatDate(run.started_at) }) }}</span>
                                         <span class="text-muted-foreground">→</span>
-                                        <span>Финиш: {{ formatDate(run.finished_at) }}</span>
+                                        <span>{{ t('dashboard.runs_feed.finished', { date: formatDate(run.finished_at) }) }}</span>
                                     </div>
                                 </div>
                                 <div class="text-xs text-muted-foreground">
-                                    Создано {{ formatDate(run.created_at) }}
+                                    {{ t('dashboard.runs_feed.created', { date: formatDate(run.created_at) }) }}
                                 </div>
                             </div>
                         </div>
                         <div v-else class="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
-                            Запусков пока не было. Стартуйте потоки, чтобы собрать историю.
+                            {{ t('dashboard.runs_feed.empty') }}
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card class="self-start">
                     <CardHeader class="pb-3">
-                        <CardTitle>Краткие метрики</CardTitle>
-                        <CardDescription>Контроль точек без таблиц</CardDescription>
+                        <CardTitle>{{ t('dashboard.active_deploys.title') }}</CardTitle>
+                        <CardDescription>{{ t('dashboard.active_deploys.description') }}</CardDescription>
                     </CardHeader>
-                    <CardContent class="space-y-4 text-sm text-muted-foreground">
-                        <div class="flex items-center justify-between">
-                            <span>В работе</span>
-                            <span class="font-semibold text-foreground">{{ flowStats?.running ?? 0 }}</span>
+                    <CardContent>
+                        <div v-if="activeDeploys?.length" class="space-y-2">
+                            <div
+                                v-for="run in activeDeploys"
+                                :key="run.id"
+                                class="rounded-lg border border-border/60 bg-muted/30 p-3"
+                            >
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <Link
+                                            :href="flowShow({ flow: run.flow.id }).url"
+                                            class="text-sm font-semibold hover:text-primary"
+                                        >
+                                            {{ run.flow.name }}
+                                        </Link>
+                                        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                            <Badge :class="statusTone(run.status)" variant="outline">
+                                                {{ statusLabel(run.status) }}
+                                            </Badge>
+                                            <span>{{ runTypeLabel(run.type) }}</span>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs text-muted-foreground">
+                                        {{ t('dashboard.active_deploys.started', { date: formatDate(run.started_at) }) }}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex items-center justify-between">
-                            <span>Черновики</span>
-                            <span class="font-semibold text-foreground">{{ (flowStats?.total ?? 0) - (flowStats?.running ?? 0) - (flowStats?.stopped ?? 0) }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span>Контейнеры подняты</span>
-                            <span class="font-semibold text-foreground">{{ flowStats?.withContainer ?? 0 }}</span>
-                        </div>
-                        <div class="rounded-lg border border-dashed border-border/80 bg-muted/40 p-3">
-                            <p class="text-xs text-muted-foreground">Видите странные числа? Зайдите в конкретный поток и проверьте логи запуска.</p>
+                        <div v-else class="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+                            {{ t('dashboard.active_deploys.empty') }}
                         </div>
                     </CardContent>
                 </Card>

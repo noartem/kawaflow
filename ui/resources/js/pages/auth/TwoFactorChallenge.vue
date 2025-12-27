@@ -11,6 +11,7 @@ import AuthLayout from '@/layouts/AuthLayout.vue';
 import { store } from '@/routes/two-factor/login';
 import { Form, Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 interface AuthConfigContent {
     title: string;
@@ -18,21 +19,21 @@ interface AuthConfigContent {
     toggleText: string;
 }
 
+const { t } = useI18n();
+
 const authConfigContent = computed<AuthConfigContent>(() => {
     if (showRecoveryInput.value) {
         return {
-            title: 'Recovery Code',
-            description:
-                'Please confirm access to your account by entering one of your emergency recovery codes.',
-            toggleText: 'login using an authentication code',
+            title: t('auth.two_factor.recovery.title'),
+            description: t('auth.two_factor.recovery.description'),
+            toggleText: t('auth.two_factor.recovery.toggle'),
         };
     }
 
     return {
-        title: 'Authentication Code',
-        description:
-            'Enter the authentication code provided by your authenticator application.',
-        toggleText: 'login using a recovery code',
+        title: t('auth.two_factor.code.title'),
+        description: t('auth.two_factor.code.description'),
+        toggleText: t('auth.two_factor.code.toggle'),
     };
 });
 
@@ -53,7 +54,7 @@ const codeValue = computed<string>(() => code.value.join(''));
         :title="authConfigContent.title"
         :description="authConfigContent.description"
     >
-        <Head title="Two-Factor Authentication" />
+        <Head :title="t('auth.two_factor.title')" />
 
         <div class="space-y-6">
             <template v-if="!showRecoveryInput">
@@ -71,7 +72,7 @@ const codeValue = computed<string>(() => code.value.join(''));
                         <div class="flex w-full items-center justify-center">
                             <PinInput
                                 id="otp"
-                                placeholder="○"
+                                :placeholder="t('auth.two_factor.placeholder')"
                                 v-model="code"
                                 type="number"
                                 otp
@@ -89,11 +90,9 @@ const codeValue = computed<string>(() => code.value.join(''));
                         </div>
                         <InputError :message="errors.code" />
                     </div>
-                    <Button type="submit" class="w-full" :disabled="processing"
-                        >Continue</Button
-                    >
+                    <Button type="submit" class="w-full" :disabled="processing">{{ t('actions.continue') }}</Button>
                     <div class="text-center text-sm text-muted-foreground">
-                        <span>or you can </span>
+                        <span>{{ t('auth.two_factor.or') }}</span>
                         <button
                             type="button"
                             class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
@@ -115,17 +114,15 @@ const codeValue = computed<string>(() => code.value.join(''));
                     <Input
                         name="recovery_code"
                         type="text"
-                        placeholder="Enter recovery code"
+                        :placeholder="t('auth.two_factor.recovery.input')"
                         :autofocus="showRecoveryInput"
                         required
                     />
                     <InputError :message="errors.recovery_code" />
-                    <Button type="submit" class="w-full" :disabled="processing"
-                        >Continue</Button
-                    >
+                    <Button type="submit" class="w-full" :disabled="processing">{{ t('actions.continue') }}</Button>
 
                     <div class="text-center text-sm text-muted-foreground">
-                        <span>or you can </span>
+                        <span>{{ t('auth.two_factor.or') }}</span>
                         <button
                             type="button"
                             class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"

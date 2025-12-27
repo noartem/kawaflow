@@ -9,18 +9,21 @@ import AuthLayout from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
 import { Form, Head } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 
 defineProps<{
     status?: string;
 }>();
+
+const { t } = useI18n();
 </script>
 
 <template>
     <AuthLayout
-        title="Forgot password"
-        description="Enter your email to receive a password reset link"
+        :title="t('auth.forgot.title')"
+        :description="t('auth.forgot.description')"
     >
-        <Head title="Forgot password" />
+        <Head :title="t('auth.forgot.title')" />
 
         <div
             v-if="status"
@@ -32,14 +35,14 @@ defineProps<{
         <div class="space-y-6">
             <Form v-bind="email.form()" v-slot="{ errors, processing }">
                 <div class="grid gap-2">
-                    <Label for="email">Email address</Label>
+                    <Label for="email">{{ t('forms.email') }}</Label>
                     <Input
                         id="email"
                         type="email"
                         name="email"
                         autocomplete="off"
                         autofocus
-                        placeholder="email@example.com"
+                        :placeholder="t('forms.email_example')"
                     />
                     <InputError :message="errors.email" />
                 </div>
@@ -51,14 +54,14 @@ defineProps<{
                         data-test="email-password-reset-link-button"
                     >
                         <Spinner v-if="processing" />
-                        Email password reset link
+                        {{ t('auth.forgot.submit') }}
                     </Button>
                 </div>
             </Form>
 
             <div class="space-x-1 text-center text-sm text-muted-foreground">
-                <span>Or, return to</span>
-                <TextLink :href="login()">log in</TextLink>
+                <span>{{ t('auth.forgot.return') }}</span>
+                <TextLink :href="login()">{{ t('auth.login.short') }}</TextLink>
             </div>
         </div>
     </AuthLayout>

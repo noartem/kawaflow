@@ -10,6 +10,7 @@ from models import (
     ContainerStatus,
     CreateContainerEvent,
     ErrorResponse,
+    GenerateLockEvent,
     SendMessageEvent,
     UpdateContainerEvent,
 )
@@ -49,6 +50,7 @@ class EventHandler:
             "send_message": self.handle_send_message,
             "get_container_status": self.handle_get_status,
             "list_containers": self.handle_list_containers,
+            "generate_lock": self.handle_generate_lock,
         }
 
         self._register_container_callbacks()
@@ -235,6 +237,31 @@ class EventHandler:
             ],
             "count": len(containers),
         }
+
+    async def handle_generate_lock(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        event_data = GenerateLockEvent(**data)
+
+        try:
+            lock_content = await self.container_manager.generate_uv_lock(
+                event_data.image, event_data.code
+            )
+            payload = {
+                "flow_id": event_data.flow_id,
+                "flow_run_id": event_data.flow_run_id,
+                "lock": lock_content,
+            }
+            await self.messaging.publish_event("lock_generated", payload)
+            return payload
+        except Exception as exc:
+            await self.messaging.publish_event(
+                "lock_failed",
+                {
+                    "flow_id": event_data.flow_id,
+                    "flow_run_id": event_data.flow_run_id,
+                    "error": str(exc),
+                },
+            )
+            raise
 
     async def _emit_error(
         self,

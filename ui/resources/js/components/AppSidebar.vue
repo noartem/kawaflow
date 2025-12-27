@@ -15,25 +15,33 @@ import {
 } from '@/components/ui/sidebar';
 import { urlIsActive } from '@/lib/utils';
 import { dashboard } from '@/routes';
-import { index as flowsIndex, show as flowShow } from '@/routes/flows';
+import { create as flowCreate, index as flowsIndex, show as flowShow } from '@/routes/flows';
 import { type FlowSidebarItem, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Workflow, Activity } from 'lucide-vue-next';
+import { Activity, LayoutGrid, Plus, Workflow } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import AppLogo from './AppLogo.vue';
 
-const mainNavItems: NavItem[] = [
+const { t } = useI18n();
+
+const mainNavItems = computed<NavItem[]>(() => [
     {
-        title: 'Dashboard',
+        title: t('nav.dashboard'),
         href: dashboard(),
         icon: LayoutGrid,
     },
     {
-        title: 'Flows',
+        title: t('nav.flows'),
         href: flowsIndex().url,
         icon: Workflow,
     },
-];
+    {
+        title: t('nav.new_flow'),
+        href: flowCreate().url,
+        icon: Plus,
+    },
+]);
 
 const footerNavItems: NavItem[] = [
 ];
@@ -53,6 +61,8 @@ const statusTone = (status?: string | null) => {
             return 'bg-sidebar-accent/50 text-sidebar-foreground/80 ring-1 ring-sidebar-border';
     }
 };
+
+const statusLabel = (status?: string | null) => t(`statuses.${status ?? 'draft'}`);
 </script>
 
 <template>
@@ -73,7 +83,7 @@ const statusTone = (status?: string | null) => {
             <NavMain :items="mainNavItems" />
 
             <SidebarGroup v-if="recentFlows.length" class="px-2 pt-2">
-                <SidebarGroupLabel>Последние flow</SidebarGroupLabel>
+                <SidebarGroupLabel>{{ t('nav.recent_flows') }}</SidebarGroupLabel>
                 <SidebarMenu>
                     <SidebarMenuItem
                         v-for="flow in recentFlows"
@@ -93,7 +103,7 @@ const statusTone = (status?: string | null) => {
                                     class="ml-auto rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
                                     :class="statusTone(flow.status)"
                                 >
-                                    {{ flow.status ?? 'draft' }}
+                                    {{ statusLabel(flow.status) }}
                                 </span>
                             </Link>
                         </SidebarMenuButton>

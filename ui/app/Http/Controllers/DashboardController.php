@@ -59,6 +59,25 @@ class DashboardController extends Controller
             ->get([
                 'id',
                 'flow_id',
+                'type',
+                'active',
+                'status',
+                'started_at',
+                'finished_at',
+                'created_at',
+            ]);
+
+        $activeDeploys = FlowRun::query()
+            ->with('flow:id,name,slug,status')
+            ->whereIn('flow_id', $flowIds)
+            ->where('active', true)
+            ->latest('started_at')
+            ->limit(10)
+            ->get([
+                'id',
+                'flow_id',
+                'type',
+                'active',
                 'status',
                 'started_at',
                 'finished_at',
@@ -72,6 +91,7 @@ class DashboardController extends Controller
             ],
             'recentFlows' => $recentFlows,
             'recentRuns' => $recentRuns,
+            'activeDeploys' => $activeDeploys,
         ]);
     }
 }

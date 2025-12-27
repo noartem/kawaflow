@@ -13,15 +13,24 @@ class FlowRun extends Model
 
     protected $fillable = [
         'flow_id',
+        'type',
+        'active',
         'status',
         'container_id',
         'meta',
+        'lock',
+        'actors',
+        'events',
         'started_at',
         'finished_at',
     ];
 
     protected $casts = [
         'meta' => 'array',
+        'active' => 'boolean',
+        'lock' => 'string',
+        'actors' => 'array',
+        'events' => 'array',
         'started_at' => 'datetime',
         'finished_at' => 'datetime',
     ];

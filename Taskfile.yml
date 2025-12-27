@@ -99,3 +99,10 @@ tasks:
       - task: compose:down
       - task: compose:build
       - task: compose:up
+
+  compose:logs:
+    desc: Show logs
+    cmds:
+      - task: compose
+        vars:
+          CLI_ARGS: logs -f {{ .CLI_ARGS }}

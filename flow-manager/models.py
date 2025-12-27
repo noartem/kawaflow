@@ -216,6 +216,22 @@ class CreateContainerEvent(BaseModel):
         return v.strip() if v else None
 
 
+class GenerateLockEvent(BaseModel):
+    """Data for generate_lock command."""
+
+    flow_id: int = Field(..., description="Flow ID")
+    flow_run_id: int = Field(..., description="FlowRun ID")
+    image: str = Field(..., description="Docker image name")
+    code: str = Field(..., description="Python code for main.py")
+
+    @field_validator("image")
+    @classmethod
+    def validate_image(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Image name cannot be empty")
+        return v.strip()
+
+
 class ContainerOperationEvent(BaseModel):
     """Data for container operation Socket.IO events."""
 
