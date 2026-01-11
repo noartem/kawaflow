@@ -52,6 +52,13 @@ tasks:
         vars:
           CLI_ARGS: php artisan tinker
 
+  boost:mcp:
+    aliases: [ ti ]
+    cmds:
+      - task: exec
+        vars:
+          CLI_ARGS: php artisan boost:mcp
+
   db:reset:
     cmds:
       - task: exec

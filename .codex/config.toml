@@ -1,0 +1,3 @@
+[mcp_servers.boost]
+command = "task"
+args = ["ui:boost:mcp"]

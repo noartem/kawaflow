@@ -21,6 +21,7 @@
 - Framework: pytest; test files `test_*.py` mirroring source (e.g., `kawa/tests/test_registry.py` for `kawa/registry.py`). Include unit, integration, and async WebSocket tests for flow-manager; mock Docker SDK where practical.
 - UI uses phpunit in `ui/tests`; run via `task ui:test` and filter with `--filter` when needed.
 - Add tests for every feature/bugfix; keep them independent and cover success + error paths. Use standard pytest options through Task (`-k`, `-v`, specific node ids).
+- Flows generate an internal actor graph at runtime (actors as nodes, events as edges) from Python code; e2e tests must validate the runtime actor graph matches the code-derived structure, not just the UI graph JSON.
 
 ## Security & Operations
 - Never run Python tooling directly on host; use Task + Docker to ensure UV-managed, reproducible environments. Run UI tooling through the compose-based tasks (artisan/composer via `task ui:*`) instead of host binaries. Keep secrets in `.env` and inject via tasks/containers; avoid shelling out with unsanitized inputs in FastAPI handlers.
