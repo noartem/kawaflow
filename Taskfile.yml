@@ -20,6 +20,8 @@ includes:
   ui:
     taskfile: ./ui/Taskfile.yml
     dir: ./ui
+  e2e:
+    taskfile: ./e2e/Taskfile.yml
 
 tasks:
   init:
@@ -66,11 +68,10 @@ tasks:
     cmd: docker compose -f compose.yml {{ .CLI_ARGS }}
 
   compose:build:
-    aliases: [build]
     cmds:
       - task: compose
         vars:
-          CLI_ARGS: build
+          CLI_ARGS: --profile build build
 
   compose:up:
     aliases: [up, start]
@@ -106,3 +107,8 @@ tasks:
       - task: compose
         vars:
           CLI_ARGS: logs -f {{ .CLI_ARGS }}
+
+  build:
+    cmds:
+      - task: compose:build
+      - task: e2e:build

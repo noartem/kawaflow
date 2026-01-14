@@ -42,5 +42,6 @@ return [
         'event_exchange' => env('FLOW_MANAGER_EVENT_EXCHANGE', 'flow-manager.events'),
         'event_queue' => env('FLOW_MANAGER_EVENT_QUEUE', 'flow-manager.ui.events'),
         'timeout' => (int) env('FLOW_MANAGER_TIMEOUT', 8000),
+        'test_run_id' => env('KAWAFLOW_TEST_RUN_ID'),
     ],
 ];

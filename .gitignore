@@ -8,3 +8,5 @@ node_modules/
 .env
 
 repomix-output.xml
+
+e2e/reports/

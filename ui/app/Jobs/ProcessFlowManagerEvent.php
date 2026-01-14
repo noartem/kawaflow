@@ -76,6 +76,24 @@ class ProcessFlowManagerEvent implements ShouldQueue
     {
         $status = $this->payload['new_state'] ?? $this->payload['status'] ?? null;
 
+        if ($this->event === 'container_created') {
+            $containerId = $this->payload['container_id'] ?? null;
+            if ($containerId) {
+                if ($flowRun) {
+                    $flowRun->update([
+                        'container_id' => $containerId,
+                        'meta' => $this->payload,
+                    ]);
+                }
+
+                $flow->update([
+                    'container_id' => $containerId,
+                ]);
+            }
+
+            return;
+        }
+
         if ($this->event === 'lock_generated' && $flowRun) {
             $flowRun->update([
                 'lock' => $this->payload['lock'] ?? null,

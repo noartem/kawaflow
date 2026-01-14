@@ -39,6 +39,9 @@ class ContainerConfig(BaseModel):
 
     image: str = Field(..., description="Docker image name")
     name: Optional[str] = Field(None, description="Container name")
+    labels: Dict[str, str] = Field(
+        default_factory=dict, description="Docker labels for container metadata"
+    )
     environment: Dict[str, str] = Field(
         default_factory=dict, description="Environment variables"
     )
@@ -197,9 +200,17 @@ class CreateContainerEvent(BaseModel):
 
     image: str = Field(..., description="Docker image name")
     name: Optional[str] = Field(None, description="Container name")
+    flow_id: Optional[int] = Field(None, description="Flow ID")
+    flow_run_id: Optional[int] = Field(None, description="Flow run ID")
+    flow_name: Optional[str] = Field(None, description="Flow name")
+    graph_hash: Optional[str] = Field(None, description="Runtime graph hash")
+    test_run_id: Optional[str] = Field(None, description="E2E test run ID")
+    labels: Dict[str, str] = Field(default_factory=dict)
     environment: Dict[str, str] = Field(default_factory=dict)
     volumes: Dict[str, str] = Field(default_factory=dict)
     ports: Dict[str, int] = Field(default_factory=dict)
+    command: Optional[List[str]] = Field(None, description="Command to run")
+    working_dir: Optional[str] = Field(None, description="Working directory")
 
     @field_validator("image")
     @classmethod
@@ -213,6 +224,13 @@ class CreateContainerEvent(BaseModel):
     def validate_name(cls, v: Optional[str]) -> Optional[str]:
         if v is not None and not v.strip():
             raise ValueError("Container name cannot be empty string")
+        return v.strip() if v else None
+
+    @field_validator("flow_name", "graph_hash", "test_run_id")
+    @classmethod
+    def validate_optional_string(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not v.strip():
+            raise ValueError("Optional string fields cannot be empty")
         return v.strip() if v else None
 
 

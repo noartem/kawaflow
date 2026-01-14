@@ -104,18 +104,44 @@ class EventHandler:
 
     async def handle_create_container(self, data: Dict[str, Any]) -> Dict[str, Any]:
         event_data = CreateContainerEvent(**data)
+        labels = dict(event_data.labels)
+        if event_data.flow_id is not None:
+            labels.setdefault("kawaflow.flow_id", str(event_data.flow_id))
+        if event_data.flow_run_id is not None:
+            labels.setdefault("kawaflow.flow_run_id", str(event_data.flow_run_id))
+        if event_data.flow_name:
+            labels.setdefault("kawaflow.flow_name", event_data.flow_name)
+        if event_data.graph_hash:
+            labels.setdefault("kawaflow.graph_hash", event_data.graph_hash)
+        if event_data.test_run_id:
+            labels.setdefault("kawaflow.test_run_id", event_data.test_run_id)
         config = ContainerConfig(
             image=event_data.image,
             name=event_data.name,
+            labels=labels,
             environment=event_data.environment,
             volumes=event_data.volumes,
             ports=event_data.ports,
+            command=event_data.command,
+            working_dir=event_data.working_dir,
         )
 
         container_info = await self.container_manager.create_container(config)
         await self.socket_handler.setup_socket(container_info.id)
         await self.user_logger.container_created(
             container_info.id, container_info.name, container_info.image
+        )
+        await self.messaging.publish_event(
+            "container_created",
+            {
+                "container_id": container_info.id,
+                "name": container_info.name,
+                "image": container_info.image,
+                "flow_id": event_data.flow_id,
+                "flow_run_id": event_data.flow_run_id,
+                "graph_hash": event_data.graph_hash,
+                "test_run_id": event_data.test_run_id,
+            },
         )
 
         return {

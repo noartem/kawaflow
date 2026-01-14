@@ -55,6 +55,7 @@ def test_container_config():
     full_config = ContainerConfig(
         image="nginx:latest",
         name="test-container",
+        labels={"kawaflow.flow_id": "123"},
         environment={"ENV": "test"},
         volumes={"/host": "/container"},
         ports={"80": 8080},
@@ -62,6 +63,7 @@ def test_container_config():
         working_dir="/app",
     )
     assert full_config.name == "test-container"
+    assert full_config.labels["kawaflow.flow_id"] == "123"
     assert full_config.environment["ENV"] == "test"
     assert full_config.volumes["/host"] == "/container"
     assert full_config.ports["80"] == 8080
@@ -257,12 +259,24 @@ def test_socket_io_events():
     create_event = CreateContainerEvent(
         image="nginx:latest",
         name="test",
+        flow_id=42,
+        flow_run_id=7,
+        flow_name="demo",
+        graph_hash="hash123",
+        test_run_id="test-run",
+        labels={"kawaflow.flow_name": "override"},
         environment={"ENV": "test"},
         volumes={"/host": "/container"},
         ports={"80": 8080},
     )
     assert create_event.image == "nginx:latest"
     assert create_event.name == "test"
+    assert create_event.flow_id == 42
+    assert create_event.flow_run_id == 7
+    assert create_event.flow_name == "demo"
+    assert create_event.graph_hash == "hash123"
+    assert create_event.test_run_id == "test-run"
+    assert create_event.labels["kawaflow.flow_name"] == "override"
 
     # Test ContainerOperationEvent
     op_event = ContainerOperationEvent(container_id="abc123")
@@ -338,6 +352,11 @@ def test_create_container_event_validation():
     with pytest.raises(ValidationError) as exc_info:
         CreateContainerEvent(image="nginx:latest", name="")
     assert "Container name cannot be empty string" in str(exc_info.value)
+
+    # Test empty optional fields
+    with pytest.raises(ValidationError) as exc_info:
+        CreateContainerEvent(image="nginx:latest", flow_name=" ")
+    assert "Optional string fields cannot be empty" in str(exc_info.value)
 
 
 def test_container_operation_event_validation():

@@ -9,3 +9,5 @@ Dockerfile
 *.pyc
 *.pyo
 *.pyd
+
+tests/

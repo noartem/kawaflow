@@ -77,6 +77,13 @@ class ContainerManager:
             "ContainerManager initialized", {"socket_dir": self.socket_dir}
         )
 
+    def _build_labels(self, labels: Optional[Dict[str, str]]) -> Dict[str, str]:
+        merged = {k: v for k, v in (labels or {}).items() if v}
+        env_test_run_id = os.getenv("KAWAFLOW_TEST_RUN_ID")
+        if env_test_run_id and "kawaflow.test_run_id" not in merged:
+            merged["kawaflow.test_run_id"] = env_test_run_id
+        return merged
+
     async def create_container(self, config: ContainerConfig) -> ContainerInfo:
         """
         Create a new Docker container with Unix socket mounting.
@@ -104,33 +111,39 @@ class ContainerManager:
 
             # Prepare port bindings
             port_bindings = {}
-            exposed_ports = {}
             for container_port, host_port in config.ports.items():
-                port_key = f"{container_port}/tcp"
-                exposed_ports[port_key] = {}
+                port_key = (
+                    container_port
+                    if "/" in container_port
+                    else f"{container_port}/tcp"
+                )
                 port_bindings[port_key] = host_port
 
             # Prepare bind mounts
-            binds = []
+            volume_bindings: Dict[str, Dict[str, str]] = {}
             for host_path, container_path in config.volumes.items():
-                binds.append(f"{host_path}:{container_path}")
+                volume_bindings[host_path] = {"bind": container_path, "mode": "rw"}
             # Add socket bind
-            binds.append(f"{socket_path}:/var/run/kawaflow.sock")
+            volume_bindings[socket_path] = {
+                "bind": "/var/run/kawaflow.sock",
+                "mode": "rw",
+            }
 
             # Create container
+            labels = self._build_labels(config.labels)
             container = self.docker_client.containers.create(
                 image=config.image,
                 name=container_name,
+                labels=labels or None,
                 environment=config.environment,
-                ports=exposed_ports,
-                host_config=self.docker_client.api.create_host_config(
-                    port_bindings=port_bindings,
-                    binds=binds,
-                ),
+                ports=port_bindings or None,
+                volumes=volume_bindings or None,
                 command=config.command,
                 working_dir=config.working_dir,
                 detach=True,
             )
+            container.start()
+            container.reload()
 
             # Create container info
             container_info = self._build_container_info(container, socket_path)
@@ -142,6 +155,7 @@ class ContainerManager:
                     "name": container_name,
                     "image": config.image,
                     "socket_path": socket_path,
+                    "labels": labels,
                 },
             )
 
@@ -299,6 +313,7 @@ class ContainerManager:
             # Get container configuration for volume mounting
             container_config = container.attrs.get("Config", {})
             host_config = container.attrs.get("HostConfig", {})
+            labels = self._build_labels(container_config.get("Labels", {}))
             binds = host_config.get("Binds", [])
 
             # Find existing code volume mount (if any)
@@ -403,6 +418,7 @@ class ContainerManager:
             new_container = self.docker_client.containers.create(
                 image=image,
                 name=name,
+                labels=labels or None,
                 environment=environment,
                 ports=ports,
                 host_config=self.docker_client.api.create_host_config(
@@ -773,8 +789,12 @@ class ContainerManager:
                         # Skip if port can't be converted to int
                         continue
 
-        # Get image name safely
-        image = getattr(container, "image", None)
+        # Get image name safely (image metadata can be missing for orphaned images)
+        try:
+            image = getattr(container, "image", None)
+        except ImageNotFound:
+            image = None
+
         if image:
             image_tags = getattr(image, "tags", [])
             image_name = (

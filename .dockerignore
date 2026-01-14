@@ -1,8 +1,6 @@
 **/.git
 **/.gitignore
 
-**/Dockerfile
-**/*.Dockerfile
 **/.dockerignore
 
 **/__pycache__
@@ -14,4 +12,11 @@
 *.pyo
 *.pyd
 
+**/tests/
+
+**/vendor/
 **/node_modules/
+**/storage/
+**/.vite/
+**/dist/
+**/public/build/

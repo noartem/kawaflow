@@ -78,6 +78,37 @@ final readonly class FlowService
     private function deployDevelopment(Flow $flow): array
     {
         $run = $this->createDeployment($flow, 'development', 'running');
+        $payload = [
+            'image' => $flow->image ?? 'flow:dev',
+            'name' => sprintf('flow-%d-run-%d', $flow->id, $run->id),
+            'flow_id' => $flow->id,
+            'flow_run_id' => $run->id,
+            'flow_name' => $flow->name,
+            'graph_hash' => $this->graphHash($flow),
+            'test_run_id' => (string) config('services.flow_manager.test_run_id'),
+            'labels' => [
+                'kawaflow.flow_id' => (string) $flow->id,
+                'kawaflow.flow_run_id' => (string) $run->id,
+                'kawaflow.flow_name' => $flow->name,
+                'kawaflow.graph_hash' => $this->graphHash($flow),
+            ],
+            'environment' => [
+                'FLOW_ID' => (string) $flow->id,
+                'FLOW_RUN_ID' => (string) $run->id,
+            ],
+            'command' => [
+                '/bin/sh',
+                '-c',
+                sprintf(
+                    'echo "kawaflow flow %d" && tail -f /dev/null',
+                    $flow->id
+                ),
+            ],
+        ];
+        if (! $payload['test_run_id']) {
+            unset($payload['test_run_id']);
+        }
+        $this->client->createContainer($payload);
 
         return [
             'ok' => true,
@@ -103,6 +134,20 @@ final readonly class FlowService
                 'status' => 'stopped',
                 'last_finished_at' => now(),
             ]);
+        }
+
+        $containerId = $run->container_id ?? $flow->container_id;
+        if (! $containerId) {
+            $deadline = now()->addSeconds(5);
+            while (! $containerId && now()->lt($deadline)) {
+                usleep(200000);
+                $run->refresh();
+                $flow->refresh();
+                $containerId = $run->container_id ?? $flow->container_id;
+            }
+        }
+        if ($containerId) {
+            $this->client->stopContainer($containerId);
         }
 
         return ['ok' => true];
@@ -148,5 +193,13 @@ final readonly class FlowService
         if ($run->type === 'production' && $run->lock) {
             File::put($root.'/uv.lock', $run->lock);
         }
+    }
+
+    private function graphHash(Flow $flow): string
+    {
+        $graph = $flow->graph ?? [];
+        $encodedGraph = json_encode($graph, JSON_THROW_ON_ERROR);
+
+        return hash('sha256', ($flow->code ?? '').'::'.$encodedGraph);
     }
 }

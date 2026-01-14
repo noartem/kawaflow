@@ -39,6 +39,7 @@ def sample_container_config():
     return ContainerConfig(
         image="test-image:latest",
         name="test-container",
+        labels={"kawaflow.flow_id": "123"},
         environment={"TEST_VAR": "test_value"},
         volumes={"/host/path": "/container/path"},
         ports={"8080": 8080},
@@ -101,6 +102,8 @@ class TestContainerManager:
 
         # Verify Docker client was called correctly
         container_manager.docker_client.containers.create.assert_called_once()
+        _, kwargs = container_manager.docker_client.containers.create.call_args
+        assert kwargs["labels"]["kawaflow.flow_id"] == "123"
 
     @pytest.mark.asyncio
     async def test_create_container_image_not_found(

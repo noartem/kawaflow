@@ -1,0 +1,16 @@
+[project]
+name = "kawaflow-e2e"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "pytest>=8.3.0",
+    "httpx>=0.27.0",
+    "docker>=7.1.0",
+    "pydantic>=2.7.0",
+    "tenacity>=8.2.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+norecursedirs = ["fixtures", "helpers"]

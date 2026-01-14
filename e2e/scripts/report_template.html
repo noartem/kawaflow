@@ -1,0 +1,443 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>E2E Report __E2E_TS__</title>
+    <style>
+      :root {
+        --bg: #f3f1ea;
+        --bg-strong: #ebe6db;
+        --card: #ffffff;
+        --text: #1d1f1a;
+        --muted: #6a6f65;
+        --border: #e2ddd2;
+        --accent: #2c6fbb;
+        --ok: #1f7a3e;
+        --bad: #c21f2f;
+        --shadow: 0 10px 30px rgba(24, 24, 20, 0.08);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 32px;
+        font-family: "Manrope", "Avenir Next", "Futura", "Trebuchet MS", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(1200px 700px at 10% -20%, #faf7f0 0%, transparent 55%),
+          radial-gradient(900px 500px at 100% 0%, #f3efe4 0%, transparent 60%),
+          linear-gradient(180deg, #f7f5ef 0%, var(--bg) 60%, var(--bg-strong) 100%);
+      }
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 14px;
+        margin-bottom: 18px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 26px;
+        letter-spacing: 0.6px;
+      }
+      .meta {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .badge {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        border: 1px solid var(--border);
+        color: var(--text);
+        background: #fff;
+      }
+      .badge.ok { color: var(--ok); border-color: #b7dfc5; background: #eaf6ee; }
+      .badge.fail { color: var(--bad); border-color: #f3b5b9; background: #fde8ea; }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+        box-shadow: var(--shadow);
+      }
+      .card h2 {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+      }
+      .metric {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #faf8f3;
+        font-size: 13px;
+      }
+      .metric strong {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .toolbar input[type="text"] {
+        flex: 1;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 12px;
+        background: #fffefb;
+      }
+      .toolbar button {
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--muted);
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .toolbar button:hover {
+        color: var(--text);
+        border-color: #d8d2c5;
+      }
+      .toolbar label {
+        font-size: 12px;
+        color: var(--muted);
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .toolbar .stats {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 6px 0 10px 0;
+      }
+      .chip {
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text);
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all 0.12s ease;
+      }
+      .chip.off {
+        color: var(--muted);
+        background: #f7f4ed;
+      }
+      .log-box {
+        border: 1px solid var(--border);
+        background: #fcfbf7;
+        border-radius: 10px;
+        padding: 10px;
+        max-height: 90vh;
+        overflow: auto;
+      }
+      pre {
+        margin: 0;
+        font-size: 11px;
+        line-height: 1.45;
+        font-family: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      mark {
+        background: #ffe08a;
+        padding: 0 2px;
+        border-radius: 3px;
+      }
+      .log-lines {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 11px;
+        line-height: 1.4;
+        font-family: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
+      }
+      .log-line {
+        display: grid;
+        grid-template-columns: 180px 160px 1fr;
+        gap: 10px;
+        align-items: start;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .log-time {
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .log-service {
+        font-weight: 600;
+        color: var(--accent);
+      }
+      .log-message {
+        color: var(--text);
+      }
+      .muted { color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>E2E Report</h1>
+        <div class="meta">
+          <span>__E2E_TS__</span>
+          <span class="badge __E2E_STATUS_CLASS__">__E2E_STATUS__</span>
+        </div>
+      </header>
+
+      <section class="card">
+        <h2>Run Info</h2>
+        <div class="grid">
+          <div class="metric">
+            <strong>Timestamp</strong>
+            __E2E_TS__
+          </div>
+          <div class="metric">
+            <strong>Status</strong>
+            __E2E_STATUS__
+          </div>
+          <div class="metric">
+            <strong>Duration</strong>
+            __E2E_DURATION__
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="pytest-section">
+        <h2>Pytest Output</h2>
+        <div class="toolbar">
+          <input type="text" id="pytest-search" placeholder="Search pytest output..." />
+          <label><input type="checkbox" id="pytest-only" /> Only matches</label>
+          <button type="button" id="pytest-clear">Clear</button>
+          <div class="stats" id="pytest-stats"></div>
+        </div>
+        <div class="log-box">
+          <pre id="pytest-log">__E2E_PYTEST_OUTPUT__</pre>
+        </div>
+      </section>
+      <section class="card" id="service-section">
+        <h2>Service Logs</h2>
+        <div class="toolbar">
+          <input type="text" id="service-search" placeholder="Search service logs..." />
+          <label><input type="checkbox" id="service-only" /> Only matches</label>
+          <button type="button" id="service-clear">Clear</button>
+          <div class="stats" id="service-stats"></div>
+        </div>
+        <div class="chips" id="service-chips"></div>
+        <div class="log-box">
+          <div class="log-lines" id="service-log"></div>
+        </div>
+      </section>
+    </main>
+    <script type="application/json" id="service-data">__E2E_SERVICE_DATA__</script>
+    <script>
+      function escapeHtml(text) {
+        return text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function escapeRegExp(text) {
+        return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+
+      function setupSearch(inputId, onlyId, preId, clearId, statsId) {
+        const input = document.getElementById(inputId);
+        const only = document.getElementById(onlyId);
+        const pre = document.getElementById(preId);
+        const clear = document.getElementById(clearId);
+        const stats = document.getElementById(statsId);
+        if (!input || !only || !pre) return;
+
+        pre.dataset.raw = pre.textContent;
+        const raw = pre.dataset.raw || "";
+        const totalLines = raw ? raw.split("\n").length : 0;
+        const updateStats = (matchedLines) => {
+          if (!stats) return;
+          const matchedText = typeof matchedLines === "number" ? ` | matches: ${matchedLines}` : "";
+          stats.textContent = `lines: ${totalLines}${matchedText}`;
+        };
+        updateStats();
+
+        let timer = null;
+        let lastQuery = "";
+        let lastOnly = false;
+        function render() {
+          const query = input.value.trim();
+          if (query === lastQuery && only.checked === lastOnly) return;
+          lastQuery = query;
+          lastOnly = only.checked;
+          const raw = pre.dataset.raw || "";
+          if (!query) {
+            pre.textContent = raw;
+            updateStats();
+            return;
+          }
+          const q = query.toLowerCase();
+          const lines = raw.split("\n");
+          const filtered = only.checked
+            ? lines.filter((line) => line.toLowerCase().includes(q))
+            : lines;
+          updateStats(filtered.length);
+          const joined = filtered.join("\n");
+          const escaped = escapeHtml(joined);
+          const re = new RegExp(escapeRegExp(query), "gi");
+          pre.innerHTML = escaped.replace(re, (m) => "<mark>" + m + "</mark>");
+        }
+
+        function scheduleRender() {
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(render, 180);
+        }
+
+        input.addEventListener("input", scheduleRender);
+        only.addEventListener("change", render);
+        if (clear) {
+          clear.addEventListener("click", () => {
+            input.value = "";
+            render();
+          });
+        }
+      }
+
+      setupSearch("pytest-search", "pytest-only", "pytest-log", "pytest-clear", "pytest-stats");
+      const serviceDataEl = document.getElementById("service-data");
+      const serviceData = serviceDataEl ? JSON.parse(serviceDataEl.textContent || "{}") : {};
+      const serviceLines = Array.isArray(serviceData.lines) ? serviceData.lines : [];
+      const serviceNames = Array.isArray(serviceData.services) ? serviceData.services : [];
+
+      const serviceChips = document.getElementById("service-chips");
+      const serviceLog = document.getElementById("service-log");
+      const serviceSearch = document.getElementById("service-search");
+      const serviceOnly = document.getElementById("service-only");
+      const serviceClear = document.getElementById("service-clear");
+      const serviceStats = document.getElementById("service-stats");
+
+      const enabled = new Set(serviceNames);
+
+      function updateServiceStats(total, matched) {
+        if (!serviceStats) return;
+        const matchedText = typeof matched === "number" ? ` | matches: ${matched}` : "";
+        serviceStats.textContent = `lines: ${total}${matchedText}`;
+      }
+
+      function renderServiceChips() {
+        if (!serviceChips) return;
+        serviceChips.innerHTML = "";
+        serviceNames.forEach((name) => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "chip";
+          chip.textContent = name;
+          if (!enabled.has(name)) {
+            chip.classList.add("off");
+          }
+          chip.addEventListener("click", () => {
+            if (enabled.has(name)) {
+              enabled.delete(name);
+            } else {
+              enabled.add(name);
+            }
+            renderServiceChips();
+            scheduleServiceRender();
+          });
+          serviceChips.appendChild(chip);
+        });
+      }
+
+      let serviceTimer = null;
+      let lastServiceQuery = "";
+      let lastServiceOnly = false;
+      function renderServiceLogs() {
+        if (!serviceLog || !serviceSearch || !serviceOnly) return;
+        const query = serviceSearch.value.trim();
+        if (query === lastServiceQuery && serviceOnly.checked === lastServiceOnly) return;
+        lastServiceQuery = query;
+        lastServiceOnly = serviceOnly.checked;
+
+        const activeLines = serviceLines.filter((line) => enabled.has(line.service));
+        const q = query.toLowerCase();
+        const filtered = query
+          ? (serviceOnly.checked
+              ? activeLines.filter((line) => line.message.toLowerCase().includes(q))
+              : activeLines)
+          : activeLines;
+
+        updateServiceStats(activeLines.length, query ? filtered.length : undefined);
+
+        if (!query) {
+          serviceLog.innerHTML = filtered.map((line) => {
+            return `<div class="log-line">` +
+              `<span class="log-time">${escapeHtml(line.timestamp || "")}</span>` +
+              `<span class="log-service">${escapeHtml(line.service || "")}</span>` +
+              `<span class="log-message">${escapeHtml(line.message || "")}</span>` +
+              `</div>`;
+          }).join("");
+          return;
+        }
+
+        const re = new RegExp(escapeRegExp(query), "gi");
+        serviceLog.innerHTML = filtered.map((line) => {
+          const message = escapeHtml(line.message || "").replace(re, (m) => "<mark>" + m + "</mark>");
+          return `<div class="log-line">` +
+            `<span class="log-time">${escapeHtml(line.timestamp || "")}</span>` +
+            `<span class="log-service">${escapeHtml(line.service || "")}</span>` +
+            `<span class="log-message">${message}</span>` +
+            `</div>`;
+        }).join("");
+      }
+
+      function scheduleServiceRender() {
+        if (serviceTimer) clearTimeout(serviceTimer);
+        serviceTimer = setTimeout(renderServiceLogs, 180);
+      }
+
+      if (serviceSearch) {
+        serviceSearch.addEventListener("input", scheduleServiceRender);
+      }
+      if (serviceOnly) {
+        serviceOnly.addEventListener("change", renderServiceLogs);
+      }
+      if (serviceClear && serviceSearch) {
+        serviceClear.addEventListener("click", () => {
+          serviceSearch.value = "";
+          renderServiceLogs();
+        });
+      }
+
+      renderServiceChips();
+      renderServiceLogs();
+    </script>
+  </body>
+</html>
