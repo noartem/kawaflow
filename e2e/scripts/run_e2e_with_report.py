@@ -7,9 +7,18 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from collections import deque
+from typing import Protocol, cast
 
-import docker
 import httpx
+
+
+class DockerContainers(Protocol):
+    def list(self, *args: object, **kwargs: object) -> list: ...
+
+
+class DockerClient(Protocol):
+    containers: DockerContainers
 
 
 REPORTS_DIR = Path("reports")
@@ -17,30 +26,89 @@ PROJECT_NAME = os.getenv("E2E_DOCKER_PROJECT", "kawaflow-e2e")
 BASE_URL = os.getenv("E2E_BASE_URL", "http://ui-app.local:8000")
 HEALTH_PATH = os.getenv("E2E_HEALTH_PATH", "/up")
 HEALTH_TIMEOUT = int(os.getenv("E2E_HEALTH_TIMEOUT", "60"))
+LOG_LINE_LIMIT = int(os.getenv("E2E_LOG_LINE_LIMIT", "5000"))
+PYTEST_OUTPUT_LIMIT = int(os.getenv("E2E_PYTEST_OUTPUT_LIMIT", "200000"))
+PYTEST_DISABLE_PLUGIN_AUTOLOAD = (
+    os.getenv("E2E_PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1").strip() == "1"
+)
 TEST_RUN_ID = os.getenv("E2E_TEST_RUN_ID", "")
 TEMPLATE_PATH = Path(__file__).with_name("report_template.html")
 
 
+def get_docker_client() -> DockerClient | None:
+    try:
+        import docker
+    except Exception as exc:  # pragma: no cover - defensive import
+        sys.stderr.write(f"Docker SDK unavailable: {exc}\n")
+        return None
+    try:
+        return cast(DockerClient, docker.from_env())
+    except Exception as exc:
+        sys.stderr.write(f"Docker SDK init failed: {exc}\n")
+        return None
+
+
+def project_name_candidates() -> list[str]:
+    names: list[str] = []
+
+    def add(name: str | None) -> None:
+        if name and name not in names:
+            names.append(name)
+
+    add(PROJECT_NAME)
+    add(os.getenv("COMPOSE_PROJECT_NAME"))
+
+    for name in list(names):
+        add(name.replace("-", "_"))
+        add(name.replace("_", "-"))
+
+    return names
+
+
 def run_pytest() -> tuple[int, str]:
+    env = os.environ.copy()
+    if PYTEST_DISABLE_PLUGIN_AUTOLOAD:
+        env["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
     process = subprocess.Popen(
-        [sys.executable, "-m", "pytest"],
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-p",
+            "no:terminal",
+            "-p",
+            "no:cacheprovider",
+            "--assert=plain",
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+        env=env,
     )
-    output_lines: list[str] = []
+    output_lines: deque[str] = deque()
+    output_size = 0
+    truncated = False
     assert process.stdout is not None
     for line in process.stdout:
         sys.stdout.write(line)
         output_lines.append(line)
+        output_size += len(line)
+        while output_size > PYTEST_OUTPUT_LIMIT and output_lines:
+            output_size -= len(output_lines.popleft())
+            truncated = True
     process.wait()
-    return process.returncode, "".join(output_lines)
+    output = "".join(output_lines)
+    if truncated:
+        output = f"<pytest output truncated at {PYTEST_OUTPUT_LIMIT} chars>\n" + output
+    return process.returncode, output
 
 
 def cleanup_flow_containers() -> None:
     if not TEST_RUN_ID:
         return
-    client = docker.from_env()
+    client = get_docker_client()
+    if client is None:
+        return
     containers = client.containers.list(
         all=True,
         filters={"label": f"kawaflow.test_run_id={TEST_RUN_ID}"},
@@ -73,21 +141,47 @@ def wait_for_ui() -> None:
     raise RuntimeError(f"UI health check failed for {url}: {last_error}")
 
 
-def collect_logs() -> tuple[list[dict[str, str]], list[str]]:
-    client = docker.from_env()
-    containers = client.containers.list(
-        all=True,
-        filters={"label": f"com.docker.compose.project={PROJECT_NAME}"},
-    )
+def collect_logs(since: int | None) -> tuple[list[dict[str, str]], list[str]]:
+    client = get_docker_client()
+    if client is None:
+        return (
+            [
+                {
+                    "service": "docker",
+                    "timestamp": "",
+                    "message": "<docker client unavailable>",
+                }
+            ],
+            ["docker"],
+        )
+    containers: list = []
+    for name in project_name_candidates():
+        containers = client.containers.list(
+            all=True,
+            filters={"label": f"com.docker.compose.project={name}"},
+        )
+        if containers:
+            break
+
+    if not containers:
+        containers = client.containers.list(all=True)
+
     containers.sort(key=lambda container: container.name or "")
     lines: list[dict[str, str]] = []
     services: list[str] = []
+    total_lines = 0
+    truncated = False
     for container in containers:
         service = container.labels.get("com.docker.compose.service", container.name)
         if service not in services:
             services.append(service)
         try:
-            raw = container.logs(timestamps=True, stdout=True, stderr=True)
+            raw = container.logs(
+                timestamps=True,
+                stdout=True,
+                stderr=True,
+                since=since,
+            )
         except Exception as exc:  # pragma: no cover - defensive for docker API errors
             lines.append(
                 {
@@ -96,6 +190,10 @@ def collect_logs() -> tuple[list[dict[str, str]], list[str]]:
                     "message": f"<failed to read logs: {exc}>",
                 }
             )
+            total_lines += 1
+            if total_lines >= LOG_LINE_LIMIT:
+                truncated = True
+                break
             continue
         text = raw.decode("utf-8", errors="replace").strip()
         if not text:
@@ -106,8 +204,15 @@ def collect_logs() -> tuple[list[dict[str, str]], list[str]]:
                     "message": "<no logs>",
                 }
             )
+            total_lines += 1
+            if total_lines >= LOG_LINE_LIMIT:
+                truncated = True
+                break
             continue
         for line in text.splitlines():
+            if total_lines >= LOG_LINE_LIMIT:
+                truncated = True
+                break
             if " " in line:
                 timestamp, message = line.split(" ", 1)
             else:
@@ -119,6 +224,19 @@ def collect_logs() -> tuple[list[dict[str, str]], list[str]]:
                     "message": message,
                 }
             )
+            total_lines += 1
+        if truncated:
+            break
+    if truncated:
+        if "system" not in services:
+            services.append("system")
+        lines.append(
+            {
+                "service": "system",
+                "timestamp": "",
+                "message": f"<log output truncated at {LOG_LINE_LIMIT} lines>",
+            }
+        )
     return lines, services
 
 
@@ -165,13 +283,14 @@ def build_report(
 def main() -> int:
     start = dt.datetime.now()
     ts = start.strftime("%Y%m%d-%H%M%S")
+    start_timestamp = int(start.timestamp())
 
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     cleanup_flow_containers()
     wait_for_ui()
     exit_code, pytest_output = run_pytest()
-    log_lines, services = collect_logs()
+    log_lines, services = collect_logs(start_timestamp)
 
     duration = str(dt.datetime.now() - start).split(".")[0]
     status = "passed" if exit_code == 0 else f"failed ({exit_code})"
