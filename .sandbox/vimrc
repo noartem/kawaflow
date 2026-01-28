@@ -1,0 +1,17 @@
+set nocompatible
+set number
+set relativenumber
+set tabstop=4
+set shiftwidth=4
+set expandtab
+set smartindent
+set hidden
+set nowrap
+set ignorecase
+set smartcase
+set incsearch
+set hlsearch
+set mouse=a
+set clipboard=unnamedplus
+syntax on
+set langmap=ФИСВУАПРШОЛДЬТЩЗЙКЫЕГМЦЧНЯ;ABCDEFGHIJKLMNOPQRSTUVWXYZ,фисвуапршолдьтщзйкыегмцчня;abcdefghijklmnopqrstuvwxyz

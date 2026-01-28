@@ -1,0 +1,88 @@
+services:
+    sandbox:
+        build:
+            context: .
+            dockerfile: .sandbox/Dockerfile
+            args:
+                APP_UID: ${APP_UID:-1000}
+                APP_GID: ${APP_GID:-1000}
+                USER: ${USER}
+                PROJECT_PATH: ${PWD}
+        user: "${APP_UID:-1000}:${APP_GID:-1000}"
+        command: sleep infinity
+        env_file:
+            - .env
+        environment:
+            - HOME=/home/${USER}
+            - XDG_CONFIG_HOME=/home/${USER}/.config
+            - XDG_DATA_HOME=/home/${USER}/.local/share
+            - XDG_STATE_HOME=/home/${USER}/.local/state
+            - XDG_CACHE_HOME=/home/${USER}/.cache
+        volumes:
+            - tmp:/tmp
+            - vendor:${PWD}/vendor
+            - composer-cache:/home/${USER}/.composer/cache
+            - node-modules:${PWD}/node_modules
+            - .:${PWD}
+            - ${PWD}/../${PROJECT}:${PWD}/../${PROJECT}
+            - .sandbox/zshrc:/home/${USER}/.zshrc
+            - zsh-history:/home/${USER}/.zsh_history.d
+            - .sandbox/vimrc:/home/${USER}/.vimrc
+            - ${HOME}/.gitconfig:/home/${USER}/.gitconfig:ro
+            - opencode-config:/home/${USER}/.config/opencode
+            - opencode-data:/home/${USER}/.local/share/opencode
+            - opencode-state:/home/${USER}/.local/state/opencode
+            - opencode-cache:/home/${USER}/.cache/opencode
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        ports:
+            - '${APP_PORT}:${APP_PORT}'
+            - '${VITE_PORT}:${VITE_PORT}'
+            - '${OPENCODE_WEB_PORT}:${OPENCODE_WEB_PORT}'
+
+    postgres:
+        image: postgres:16-alpine3.18
+        environment:
+            POSTGRES_DB: ${DB_DATABASE}
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - pg-data:/var/lib/postgresql/data:rw
+        healthcheck:
+            test: pg_isready -d ${DB_DATABASE} -U ${DB_USERNAME}
+            interval: 2s
+            timeout: 5s
+            start_period: 2s
+
+    redis:
+        image: redis:7.2.3-alpine3.18
+        command: --requirepass ${REDIS_PASSWORD}
+        volumes:
+            - redis-data:/data:rw
+        healthcheck:
+            test: ['CMD', 'redis-cli', 'ping']
+            interval: 500ms
+            timeout: 1s
+
+    minio:
+        image: minio/minio:latest
+        command: server /data --console-address ":9001"
+        environment:
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+        volumes:
+            - minio-data:/data:rw
+
+volumes:
+    tmp: {}
+    vendor: {}
+    composer-cache: {}
+    node-modules: {}
+    zsh-history: {}
+    opencode-config: {}
+    opencode-data: {}
+    opencode-state: {}
+    opencode-cache: {}
+    pg-data: {}
+    redis-data: {}
+    minio-data: {}

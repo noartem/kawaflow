@@ -1,0 +1,82 @@
+HISTFILE=$HOME/.zsh_history.d/history
+HISTSIZE=100000
+SAVEHIST=100000
+
+setopt APPEND_HISTORY
+setopt INC_APPEND_HISTORY
+setopt SHARE_HISTORY
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_REDUCE_BLANKS
+setopt EXTENDED_HISTORY
+
+
+export PATH="$HOME/.composer/vendor/bin:$PATH"
+export EDITOR=vim
+export VISUAL=vim
+
+
+export EDITOR=vim
+export VISUAL=vim
+export PAGER=less
+export LESS='-R -F -X'
+
+# ls colors
+autoload -Uz colors && colors
+export CLICOLOR=1
+
+
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+
+bindkey -e
+# Ctrl+Left -> move word backward
+bindkey '^[[1;5D' backward-word
+# Ctrl+Right -> move word forward
+bindkey '^[[1;5C' forward-word
+# Ctrl+Delete -> delete word forward
+bindkey '^[[3;5~' kill-word
+bindkey '^[[3;2~' kill-word
+# Ctrl+Backspace -> delete word backward
+bindkey '^H' backward-kill-word
+bindkey '^[[127;5u' backward-kill-word
+bindkey '^[[3~' delete-char
+
+
+# Completion
+autoload -Uz compinit
+# кеш комплишна в writable месте (важно в контейнерах)
+ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump-$ZSH_VERSION"
+mkdir -p "${ZSH_COMPDUMP:h}"
+compinit -d "$ZSH_COMPDUMP"
+
+# Меню выбора вариантов
+zstyle ':completion:*' menu select
+# Удобнее: не быть слишком строгим к регистру и разделителям
+zstyle ':completion:*' matcher-list \
+  'm:{a-zA-Z}={A-Za-z}' \
+  'r:|[._-]=* r:|=*'
+
+
+# fzf
+
+if command -v fzf >/dev/null 2>&1; then
+  export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
+fi
+
+# Поиск по истории Ctrl+R -> fzf history (если fzf есть)
+if command -v fzf >/dev/null 2>&1; then
+  fzf-history-widget() {
+    local selected
+    selected=$(fc -rl 1 | sed 's/^[ ]*[0-9]\+[ ]*//' | fzf --tac --query="$LBUFFER") || return
+    LBUFFER="$selected"
+  }
+  zle -N fzf-history-widget
+  bindkey '^R' fzf-history-widget
+fi
+
+
+autoload -Uz colors && colors
+setopt PROMPT_SUBST
+PROMPT='%F{cyan}%n%f:%F{yellow}%~%f$ '
